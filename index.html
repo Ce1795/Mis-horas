@@ -191,7 +191,7 @@
 
     <!-- Modal Entrada Manual / Editar Turno -->
     <div id="shiftModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
-        <div class="bg-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-2xl border border-slate-700 p-6 space-y-4 shadow-2xl">
+        <div class="bg-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-2xl border border-slate-700 p-6 space-y-4 shadow-2xl overflow-y-auto max-h-[90vh]">
             <div class="flex justify-between items-center border-b border-slate-700 pb-3">
                 <h3 id="modalTitle" class="text-base font-bold text-slate-100">Registrar Turno</h3>
                 <button onclick="closeShiftModal()" class="text-slate-400 hover:text-slate-200 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
@@ -199,25 +199,52 @@
             
             <form id="shiftForm" onsubmit="saveShift(event)" class="space-y-4">
                 <input type="hidden" id="shiftId">
+                
                 <div>
                     <label class="block text-xs font-medium text-slate-300 mb-1">Fecha</label>
                     <input type="date" id="shiftDate" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
                 </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">Hora Entrada</label>
-                        <input type="time" id="startTime" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
+
+                <!-- Checkbox Día Libre -->
+                <div class="flex items-center gap-2 bg-slate-900/50 p-2.5 rounded-xl border border-slate-700/50">
+                    <input type="checkbox" id="isDayOff" onchange="toggleDayOffUI()" class="w-4 h-4 rounded text-emerald-500 bg-slate-900 border-slate-700 focus:ring-emerald-500">
+                    <label for="isDayOff" class="text-sm font-medium text-slate-200">Marcar como Día Libre ⛱️</label>
+                </div>
+
+                <!-- Grupo de campos de tiempo (se oculta si es día libre) -->
+                <div id="timeInputsGroup" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Hora Entrada</label>
+                            <input type="time" id="startTime" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Hora Salida</label>
+                            <input type="time" id="endTime" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
+                            <p class="text-[10px] text-slate-500 mt-1 leading-tight">En blanco = Reloj en Vivo</p>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">Hora Salida</label>
-                        <input type="time" id="endTime" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
-                        <p class="text-[10px] text-slate-500 mt-1 leading-tight">Deja en blanco para iniciar el reloj en vivo.</p>
+
+                    <!-- Horas de descanso -->
+                    <div class="bg-slate-900/30 p-3 rounded-xl border border-slate-700/50">
+                        <label class="block text-xs font-medium text-slate-300 mb-2">Horario de Descanso (Opcional)</label>
+                        <div class="grid grid-cols-2 gap-3 mb-2">
+                            <div>
+                                <label class="block text-[10px] text-slate-400 mb-1">Inicio Descanso</label>
+                                <input type="time" id="breakStartTime" onchange="calculateBreakMinutes()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-slate-400 mb-1">Fin Descanso</label>
+                                <input type="time" id="breakEndTime" onchange="calculateBreakMinutes()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 mt-2 pt-2 border-t border-slate-700/50">
+                            <label class="text-xs text-slate-300">Minutos a descontar:</label>
+                            <input type="number" id="breakMinutes" value="30" min="0" class="w-16 bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-center text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
+                        </div>
                     </div>
                 </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Descanso (Minutos no pagados)</label>
-                    <input type="number" id="breakMinutes" value="30" min="0" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
-                </div>
+
                 <div>
                     <label class="block text-xs font-medium text-slate-300 mb-1">Ubicación / Sitio</label>
                     <input type="text" id="shiftLocation" placeholder="Ej. Taller, Obra A..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
@@ -226,7 +253,7 @@
                     <label class="block text-xs font-medium text-slate-300 mb-1">Notas (Opcional)</label>
                     <input type="text" id="shiftNotes" placeholder="Detalles adicionales..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
                 </div>
-                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-xl transition shadow-md text-sm">
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-xl transition shadow-md text-sm mt-2">
                     Guardar Turno
                 </button>
             </form>
@@ -354,12 +381,16 @@
             }).sort((a,b) => new Date(b.date) - new Date(a.date));
 
             let totalMins = 0;
+            let workedShiftsCount = 0;
             cycleShifts.forEach(s => {
-                const [hS, mS] = s.startTime.split(':').map(Number);
-                const [hE, mE] = s.endTime.split(':').map(Number);
-                let mins = ((hE * 60 + mE) - (hS * 60 + mS)) - (parseInt(s.breakMinutes) || 0);
-                if (mins < 0) mins += 24 * 60;
-                if (mins > 0) totalMins += mins;
+                if (!s.isDayOff) {
+                    const [hS, mS] = s.startTime.split(':').map(Number);
+                    const [hE, mE] = s.endTime.split(':').map(Number);
+                    let mins = ((hE * 60 + mE) - (hS * 60 + mS)) - (parseInt(s.breakMinutes) || 0);
+                    if (mins < 0) mins += 24 * 60;
+                    if (mins > 0) totalMins += mins;
+                    workedShiftsCount++;
+                }
             });
 
             const totalHours = totalMins / 60;
@@ -370,7 +401,7 @@
             document.getElementById('feeDisplay').innerText = `-$${feeAmount.toFixed(2)} (${feePercent}%)`;
             document.getElementById('totalNetPay').innerText = `$${net.toFixed(2)}`;
             document.getElementById('totalPeriodHours').innerText = `${totalHours.toFixed(1)} h`;
-            document.getElementById('shiftCount').innerText = cycleShifts.length;
+            document.getElementById('shiftCount').innerText = workedShiftsCount; // Solo cuenta días trabajados
 
             renderShiftsList(cycleShifts);
             renderChart(start, cycleShifts);
@@ -385,6 +416,28 @@
             }
 
             listEl.innerHTML = cycleShifts.map(s => {
+                const dateObj = new Date(s.date + 'T00:00:00');
+                const dateFormatted = dateObj.toLocaleDateString('es-ES', { weekday: 'short', month: 'short', day: 'numeric' });
+
+                // Render especial si es día libre
+                if (s.isDayOff) {
+                    return `
+                    <div class="bg-slate-800/40 border border-slate-700/40 p-3.5 rounded-xl flex justify-between items-center shadow-sm opacity-80">
+                        <div class="space-y-0.5">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold text-slate-400 capitalize">${dateFormatted}</span>
+                            </div>
+                            <div class="text-sm font-semibold text-slate-300">⛱️ Día Libre</div>
+                            ${s.notes && s.notes !== 'Día Libre' ? `<div class="text-[11px] text-slate-400 italic">${s.notes}</div>` : ''}
+                        </div>
+                        <div class="flex gap-1 border-l border-slate-700 pl-2">
+                            <button onclick="editShift('${s.id}')" class="text-slate-400 hover:text-slate-200 p-1"><i class="fa-solid fa-pen text-xs"></i></button>
+                            <button onclick="deleteShift('${s.id}')" class="text-red-400 hover:text-red-300 p-1"><i class="fa-solid fa-trash text-xs"></i></button>
+                        </div>
+                    </div>`;
+                }
+
+                // Render normal para días trabajados
                 const [hS, mS] = s.startTime.split(':').map(Number);
                 const [hE, mE] = s.endTime.split(':').map(Number);
                 let mins = ((hE * 60 + mE) - (hS * 60 + mS)) - (parseInt(s.breakMinutes) || 0);
@@ -392,8 +445,11 @@
                 let hrs = Math.max(0, mins / 60);
                 let pay = hrs * settings.rate;
 
-                const dateObj = new Date(s.date + 'T00:00:00');
-                const dateFormatted = dateObj.toLocaleDateString('es-ES', { weekday: 'short', month: 'short', day: 'numeric' });
+                // Formato de hora de descanso si existe
+                let breakText = `Descanso: ${s.breakMinutes}m`;
+                if (s.breakStartTime && s.breakEndTime) {
+                    breakText = `${s.breakStartTime} - ${s.breakEndTime} (${s.breakMinutes}m)`;
+                }
 
                 return `
                     <div class="bg-slate-800 border border-slate-700/70 p-3.5 rounded-xl flex justify-between items-center shadow-sm">
@@ -408,7 +464,7 @@
                         <div class="flex items-center gap-3">
                             <div class="text-right">
                                 <div class="text-sm font-bold text-slate-100">$${pay.toFixed(2)}</div>
-                                <div class="text-[10px] text-slate-400">Descanso: ${s.breakMinutes}m</div>
+                                <div class="text-[10px] text-slate-400">${breakText}</div>
                             </div>
                             <div class="flex gap-1 border-l border-slate-700 pl-2">
                                 <button onclick="editShift('${s.id}')" class="text-slate-400 hover:text-slate-200 p-1"><i class="fa-solid fa-pen text-xs"></i></button>
@@ -430,7 +486,7 @@
                 const dStr = d.toISOString().split('T')[0];
                 labels.push(d.toLocaleDateString('es-ES', { weekday: 'narrow', day: 'numeric' }));
                 
-                const shift = cycleShifts.find(s => s.date === dStr);
+                const shift = cycleShifts.find(s => s.date === dStr && !s.isDayOff);
                 if (shift) {
                     const [hS, mS] = shift.startTime.split(':').map(Number);
                     const [hE, mE] = shift.endTime.split(':').map(Number);
@@ -476,12 +532,16 @@
                 });
 
                 let mins = 0;
+                let workedShiftsCount = 0;
                 pastShifts.forEach(s => {
-                    const [hS, mS] = s.startTime.split(':').map(Number);
-                    const [hE, mE] = s.endTime.split(':').map(Number);
-                    let m = ((hE * 60 + mE) - (hS * 60 + mS)) - (parseInt(s.breakMinutes) || 0);
-                    if (m < 0) m += 24 * 60;
-                    if (m > 0) mins += m;
+                    if(!s.isDayOff) {
+                        const [hS, mS] = s.startTime.split(':').map(Number);
+                        const [hE, mE] = s.endTime.split(':').map(Number);
+                        let m = ((hE * 60 + mE) - (hS * 60 + mS)) - (parseInt(s.breakMinutes) || 0);
+                        if (m < 0) m += 24 * 60;
+                        if (m > 0) mins += m;
+                        workedShiftsCount++;
+                    }
                 });
 
                 const hrs = mins / 60;
@@ -492,7 +552,7 @@
                     <div class="bg-slate-900/50 p-2.5 rounded-xl border border-slate-700/50 flex justify-between items-center text-xs">
                         <div>
                             <span class="font-semibold text-slate-200">${start.toLocaleDateString('es-ES', opts)} - ${end.toLocaleDateString('es-ES', opts)}</span>
-                            <span class="text-slate-400 block">${pastShifts.length} turnos (${hrs.toFixed(1)}h) | Bruto: $${gross.toFixed(2)}</span>
+                            <span class="text-slate-400 block">${workedShiftsCount} turnos (${hrs.toFixed(1)}h) | Bruto: $${gross.toFixed(2)}</span>
                         </div>
                         <div class="text-right">
                             <span class="text-[10px] text-slate-400 block uppercase">Neto</span>
@@ -526,7 +586,8 @@
                         endTime: formatTime(now),
                         breakMinutes: breakMins,
                         location: livePunch.location || '',
-                        notes: 'Registrado con Reloj en Vivo'
+                        notes: 'Registrado con Reloj en Vivo',
+                        isDayOff: false
                     });
 
                     localStorage.setItem('simple_work_shifts', JSON.stringify(shifts));
@@ -633,6 +694,26 @@
             document.getElementById('timerPayDisplay').innerText = `$${earnedPay.toFixed(2)}`;
         }
 
+        // ---- NUEVAS FUNCIONES PARA DESCANSOS Y DÍAS LIBRES ----
+        function toggleDayOffUI() {
+            const isOff = document.getElementById('isDayOff').checked;
+            document.getElementById('timeInputsGroup').style.display = isOff ? 'none' : 'block';
+            document.getElementById('startTime').required = !isOff;
+        }
+
+        function calculateBreakMinutes() {
+            const start = document.getElementById('breakStartTime').value;
+            const end = document.getElementById('breakEndTime').value;
+            if (start && end) {
+                const [hS, mS] = start.split(':').map(Number);
+                const [hE, mE] = end.split(':').map(Number);
+                let mins = (hE * 60 + mE) - (hS * 60 + mS);
+                if (mins < 0) mins += 24 * 60;
+                document.getElementById('breakMinutes').value = mins;
+            }
+        }
+        // --------------------------------------------------------
+
         function addPresetShift(hours) {
             const todayStr = new Date().toISOString().split('T')[0];
             const startTime = "08:00";
@@ -647,7 +728,8 @@
                 endTime: endTime,
                 breakMinutes: 30,
                 location: '',
-                notes: `Turno rápido +${hours}h`
+                notes: `Turno rápido +${hours}h`,
+                isDayOff: false
             });
 
             localStorage.setItem('simple_work_shifts', JSON.stringify(shifts));
@@ -662,9 +744,15 @@
                 if (s) {
                     document.getElementById('shiftId').value = s.id;
                     document.getElementById('shiftDate').value = s.date;
-                    document.getElementById('startTime').value = s.startTime;
-                    document.getElementById('endTime').value = s.endTime;
-                    document.getElementById('breakMinutes').value = s.breakMinutes;
+                    
+                    document.getElementById('isDayOff').checked = !!s.isDayOff;
+                    toggleDayOffUI();
+
+                    document.getElementById('startTime').value = s.startTime || '08:00';
+                    document.getElementById('endTime').value = s.endTime || '';
+                    document.getElementById('breakStartTime').value = s.breakStartTime || '';
+                    document.getElementById('breakEndTime').value = s.breakEndTime || '';
+                    document.getElementById('breakMinutes').value = s.breakMinutes || 0;
                     document.getElementById('shiftLocation').value = s.location || '';
                     document.getElementById('shiftNotes').value = s.notes || '';
                 }
@@ -673,6 +761,8 @@
                 document.getElementById('shiftForm').reset();
                 document.getElementById('shiftId').value = '';
                 document.getElementById('shiftDate').value = new Date().toISOString().split('T')[0];
+                document.getElementById('isDayOff').checked = false;
+                toggleDayOffUI();
             }
         }
 
@@ -682,14 +772,25 @@
             e.preventDefault();
             const id = document.getElementById('shiftId').value || '_' + Math.random().toString(36).substr(2, 9);
             const date = document.getElementById('shiftDate').value;
-            const startTime = document.getElementById('startTime').value;
-            const endTime = document.getElementById('endTime').value;
-            const breakMinutes = document.getElementById('breakMinutes').value;
+            let startTime = document.getElementById('startTime').value;
+            let endTime = document.getElementById('endTime').value;
+            let breakMinutes = document.getElementById('breakMinutes').value;
+            let breakStartTime = document.getElementById('breakStartTime').value;
+            let breakEndTime = document.getElementById('breakEndTime').value;
             const location = document.getElementById('shiftLocation').value;
-            const notes = document.getElementById('shiftNotes').value;
+            let notes = document.getElementById('shiftNotes').value;
+            const isDayOff = document.getElementById('isDayOff').checked;
 
-            // Logica nueva: si no hay hora de salida, iniciar reloj en vivo.
-            if (!endTime) {
+            if (isDayOff) {
+                // Configurar datos para día libre
+                startTime = "00:00";
+                endTime = "00:00";
+                breakMinutes = 0;
+                breakStartTime = "";
+                breakEndTime = "";
+                if (!notes) notes = "Día Libre";
+            } else if (!endTime) {
+                // Logica de iniciar reloj en vivo si falta hora de salida
                 if (livePunch.active) {
                     alert('Ya hay un reloj en vivo activo. Finalízalo primero.');
                     return;
@@ -717,7 +818,7 @@
                 return;
             }
 
-            const shiftObj = { id, date, startTime, endTime, breakMinutes, location, notes };
+            const shiftObj = { id, date, startTime, endTime, breakMinutes, breakStartTime, breakEndTime, location, notes, isDayOff };
             const idx = shifts.findIndex(s => s.id === id);
             
             if (idx >= 0) shifts[idx] = shiftObj;
@@ -789,16 +890,23 @@
 
         function exportCSV() {
             if (shifts.length === 0) return alert('No hay datos para exportar');
-            let csv = 'Fecha,Ubicacion,Hora Entrada,Hora Salida,Descanso(Mins),Horas,Pago Bruto,Comision Cheque,Pago Neto\\n';
+            let csv = 'Fecha,Dia Libre,Ubicacion,Hora Entrada,Hora Salida,Inicio Descanso,Fin Descanso,Descanso(Mins),Horas,Pago Bruto,Comision Cheque,Pago Neto\n';
             shifts.forEach(s => {
-                const [hS, mS] = s.startTime.split(':').map(Number);
-                const [hE, mE] = s.endTime.split(':').map(Number);
-                let mins = ((hE * 60 + mE) - (hS * 60 + mS)) - (parseInt(s.breakMinutes) || 0);
-                if (mins < 0) mins += 24 * 60;
-                let hrs = Math.max(0, mins / 60);
-                let gross = hrs * settings.rate;
-                let { feeAmount, net } = calculateNetPay(gross);
-                csv += `"${s.date}","${s.location || ''}","${s.startTime}","${s.endTime}",${s.breakMinutes},${hrs.toFixed(2)},${gross.toFixed(2)},${feeAmount.toFixed(2)},${net.toFixed(2)}\\n`;
+                let hrs = 0, gross = 0, feeAmount = 0, net = 0;
+                
+                if (!s.isDayOff) {
+                    const [hS, mS] = s.startTime.split(':').map(Number);
+                    const [hE, mE] = s.endTime.split(':').map(Number);
+                    let mins = ((hE * 60 + mE) - (hS * 60 + mS)) - (parseInt(s.breakMinutes) || 0);
+                    if (mins < 0) mins += 24 * 60;
+                    hrs = Math.max(0, mins / 60);
+                    gross = hrs * settings.rate;
+                    let payCalc = calculateNetPay(gross);
+                    feeAmount = payCalc.feeAmount;
+                    net = payCalc.net;
+                }
+
+                csv += `"${s.date}","${s.isDayOff ? 'Si' : 'No'}","${s.location || ''}","${s.startTime}","${s.endTime}","${s.breakStartTime || ''}","${s.breakEndTime || ''}",${s.breakMinutes},${hrs.toFixed(2)},${gross.toFixed(2)},${feeAmount.toFixed(2)},${net.toFixed(2)}\n`;
             });
 
             const blob = new Blob([csv], { type: 'text/csv' });
