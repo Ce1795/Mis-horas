@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Horas y Pagos Quincenales</title>
+    
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen pb-16 font-sans select-none">
+
+    <!-- Header / Barra Superior -->
+    <header class="bg-slate-800/90 backdrop-blur-md border-b border-slate-700/60 sticky top-0 z-40 px-4 py-3 shadow-lg">
+        <div class="max-w-md mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+                    <i class="fa-solid fa-business-time text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-base font-bold leading-tight">Mis Horas & Pagos</h1>
+                    <p class="text-[11px] text-slate-400">Ciclo Quincenal (Vie - Jue)</p>
+                </div>
+            </div>
+            <button onclick="openSettings()" class="bg-slate-700/60 hover:bg-slate-600 p-2.5 rounded-xl text-slate-200 transition border border-slate-600/50">
+                <i class="fa-solid fa-gear"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-md mx-auto p-4 space-y-5">
+
+        <!-- Selector de Período y Tarjeta de Ganancias -->
+        <section class="bg-slate-800 border border-slate-700/80 rounded-2xl p-5 shadow-xl relative overflow-hidden">
+            <div class="flex justify-between items-center mb-3">
+                <div class="flex items-center gap-1.5 text-xs text-emerald-400 font-semibold uppercase tracking-wider">
+                    <i class="fa-solid fa-calendar-week"></i> Período de Pago
+                </div>
+                <div class="flex items-center gap-1 bg-slate-900/60 p-1 rounded-xl border border-slate-700/50">
+                    <button onclick="changePeriod(-1)" class="p-1.5 hover:bg-slate-700 rounded-lg text-xs text-slate-300 transition" title="Período anterior">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <button onclick="resetToCurrentPeriod()" class="px-2 py-1 hover:bg-slate-700 rounded-lg text-[11px] text-slate-300 font-medium transition">
+                        Actual
+                    </button>
+                    <button onclick="changePeriod(1)" class="p-1.5 hover:bg-slate-700 rounded-lg text-xs text-slate-300 transition" title="Período siguiente">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="text-sm font-semibold text-slate-200 mb-4" id="currentPeriodLabel">
+                Cargando fechas...
+            </div>
+
+            <!-- Desglose Financiero -->
+            <div class="space-y-2 mb-4">
+                <div class="bg-slate-900/80 rounded-xl p-3.5 border border-slate-700/50 flex justify-between items-center">
+                    <div>
+                        <span class="text-[11px] text-slate-400 block uppercase font-medium">Pago Bruto (Total Horas)</span>
+                        <span id="totalGrossPay" class="text-xl font-bold text-slate-100">$0.00</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[11px] text-slate-400 block uppercase font-medium">Comisión Cheque</span>
+                        <span id="feeDisplay" class="text-sm font-semibold text-amber-400">-$0.00 (1%)</span>
+                    </div>
+                </div>
+
+                <div class="bg-emerald-950/40 rounded-xl p-4 border border-emerald-500/30 text-center shadow-inner">
+                    <span class="text-xs text-emerald-400 uppercase tracking-wider font-bold">Pago Neto Estimado (En Mano)</span>
+                    <div id="totalNetPay" class="text-4xl font-extrabold text-emerald-400 mt-1">$0.00</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 text-center">
+                <div class="bg-slate-900/40 p-3 rounded-xl border border-slate-800">
+                    <span class="text-xs text-slate-400 block mb-0.5">Horas Totales</span>
+                    <span id="totalPeriodHours" class="text-xl font-bold text-slate-100">0.0 h</span>
+                </div>
+                <div class="bg-slate-900/40 p-3 rounded-xl border border-slate-800">
+                    <span class="text-xs text-slate-400 block mb-0.5">Turnos</span>
+                    <span id="shiftCount" class="text-xl font-bold text-slate-100">0</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cronómetro de Fichaje en Vivo -->
+        <section class="bg-slate-800/90 border border-slate-700/70 rounded-2xl p-4 shadow-lg space-y-3">
+            <div class="flex justify-between items-center border-b border-slate-700/50 pb-2">
+                <span class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-slate-500" id="clockDot"></span>
+                    Reloj de Fichaje En Vivo
+                </span>
+                <span id="clockStatus" class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-slate-700 text-slate-300">
+                    Inactivo
+                </span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 text-center py-1">
+                <div>
+                    <span class="text-[11px] text-slate-400 block">Tiempo Transcurrido</span>
+                    <span id="timerDisplay" class="text-2xl font-mono font-bold text-slate-100">00:00:00</span>
+                </div>
+                <div>
+                    <span class="text-[11px] text-slate-400 block">Ganancia Bruta</span>
+                    <span id="timerPayDisplay" class="text-2xl font-mono font-bold text-emerald-400">$0.00</span>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-[11px] text-slate-400 mb-1">Ubicación / Sitio (Opcional)</label>
+                <input type="text" id="liveLocation" placeholder="Ej. Taller, Obra A..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 focus:outline-none focus:border-emerald-500 text-xs">
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 pt-1">
+                <button id="punchBtn" onclick="togglePunch()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-3 rounded-xl shadow transition flex items-center justify-center gap-2 text-sm">
+                    <i class="fa-solid fa-play" id="punchIcon"></i> <span id="punchText">Iniciar Fichaje</span>
+                </button>
+                <button id="breakBtn" onclick="toggleBreak()" disabled class="bg-amber-600/30 text-slate-500 font-bold py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2 text-sm cursor-not-allowed">
+                    <i class="fa-solid fa-mug-hot"></i> <span id="breakText">Pausar Descanso</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Presets y Botón Manual -->
+        <section class="space-y-2">
+            <div class="flex justify-between items-center">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Atajos Rápidos</span>
+                <button onclick="openShiftModal()" class="text-xs font-semibold text-emerald-400 hover:underline flex items-center gap-1">
+                    <i class="fa-solid fa-plus"></i> Entrada Manual
+                </button>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+                <button onclick="addPresetShift(8)" class="bg-slate-800 hover:bg-slate-700 border border-slate-700/80 rounded-xl py-2.5 text-xs font-bold text-slate-200 transition">
+                    +8 Horas
+                </button>
+                <button onclick="addPresetShift(10)" class="bg-slate-800 hover:bg-slate-700 border border-slate-700/80 rounded-xl py-2.5 text-xs font-bold text-slate-200 transition">
+                    +10 Horas
+                </button>
+                <button onclick="addPresetShift(12)" class="bg-slate-800 hover:bg-slate-700 border border-slate-700/80 rounded-xl py-2.5 text-xs font-bold text-slate-200 transition">
+                    +12 Horas
+                </button>
+            </div>
+        </section>
+
+        <!-- Gráfico de Horas -->
+        <section class="bg-slate-800/80 border border-slate-700/70 rounded-2xl p-4 shadow-lg">
+            <h3 class="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-3">
+                <i class="fa-solid fa-chart-column text-emerald-400 mr-1"></i> Distribución del Ciclo
+            </h3>
+            <div class="h-40">
+                <canvas id="cycleChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Lista de Turnos del Período -->
+        <section class="space-y-3">
+            <div class="flex justify-between items-center">
+                <h3 class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Historial del Período</h3>
+                <button onclick="exportCSV()" class="text-xs text-slate-400 hover:text-slate-200 transition flex items-center gap-1">
+                    <i class="fa-solid fa-file-csv"></i> Exportar CSV
+                </button>
+            </div>
+            <div id="shiftsList" class="space-y-2.5">
+                <!-- Se llena con JS -->
+            </div>
+        </section>
+
+        <!-- Sección de Quincenas Pasadas -->
+        <section class="bg-slate-800/80 border border-slate-700/70 rounded-2xl p-4 shadow-lg space-y-3">
+            <h3 class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                <i class="fa-solid fa-clock-rotate-left text-emerald-400"></i> Resumen de Quincenas Pasadas
+            </h3>
+            <div id="pastCyclesList" class="space-y-2 max-h-48 overflow-y-auto">
+                <!-- Se llena con JS -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal Entrada Manual / Editar Turno -->
+    <div id="shiftModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-2xl border border-slate-700 p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 id="modalTitle" class="text-base font-bold text-slate-100">Registrar Turno</h3>
+                <button onclick="closeShiftModal()" class="text-slate-400 hover:text-slate-200 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <form id="shiftForm" onsubmit="saveShift(event)" class="space-y-4">
+                <input type="hidden" id="shiftId">
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Fecha</label>
+                    <input type="date" id="shiftDate" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Hora Entrada</label>
+                        <input type="time" id="startTime" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Hora Salida</label>
+                        <input type="time" id="endTime" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Descanso (Minutos no pagados)</label>
+                    <input type="number" id="breakMinutes" value="30" min="0" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Ubicación / Sitio</label>
+                    <input type="text" id="shiftLocation" placeholder="Ej. Taller, Obra A..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Notas (Opcional)</label>
+                    <input type="text" id="shiftNotes" placeholder="Detalles adicionales..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
+                </div>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-xl transition shadow-md text-sm">
+                    Guardar Turno
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Configuración y Backup -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-2xl border border-slate-700 p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="text-base font-bold text-slate-100">Configuración & Respaldos</h3>
+                <button onclick="closeSettings()" class="text-slate-400 hover:text-slate-200 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Tarifa por Hora ($)</label>
+                    <input type="number" id="hourlyRate" step="0.01" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
+                </div>
+
+                <div class="pt-2 border-t border-slate-700 space-y-2">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Copia de Seguridad (Backup)</span>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="exportBackup()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold py-2.5 px-3 rounded-xl text-xs transition flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-download"></i> Exportar JSON
+                        </button>
+                        <label class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold py-2.5 px-3 rounded-xl text-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+                            <i class="fa-solid fa-upload"></i> Importar JSON
+                            <input type="file" id="importFile" accept=".json" onchange="importBackup(event)" class="hidden">
+                        </label>
+                    </div>
+                </div>
+
+                <button onclick="saveSettings()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-xl transition shadow-md text-sm mt-2">
+                    Guardar Cambios
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lógica JavaScript -->
+    <script>
+        let settings = JSON.parse(localStorage.getItem('simple_work_settings')) || { rate: 20.00 };
+        let shifts = JSON.parse(localStorage.getItem('simple_work_shifts')) || [];
+
+        const baseCycleStart = new Date('2026-10-30T00:00:00');
+        let currentCycleOffset = 0;
+        let chartInstance = null;
+
+        let livePunch = JSON.parse(localStorage.getItem('simple_live_punch')) || {
+            active: false,
+            startTime: null,
+            onBreak: false,
+            breakStart: null,
+            totalBreakMs: 0,
+            location: ''
+        };
+        let timerInterval = null;
+
+        function getCycleDates(offset) {
+            const start = new Date(baseCycleStart);
+            start.setDate(start.getDate() + (offset * 14));
+            const end = new Date(start);
+            end.setDate(end.getDate() + 13);
+            return { start, end };
+        }
+
+        function calculateNetPay(gross) {
+            let feeRate = 0;
+            if (gross <= 1999) {
+                feeRate = 0.01; // 1%
+            } else {
+                feeRate = 0.02; // 2%
+            }
+            const feeAmount = gross * feeRate;
+            const net = gross - feeAmount;
+            return { feeAmount, net, feePercent: feeRate * 100 };
+        }
+
+        function initApp() {
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            
+            let offset = 0;
+            while(true) {
+                const { start, end } = getCycleDates(offset);
+                if (today >= start && today <= end) {
+                    currentCycleOffset = offset;
+                    break;
+                } else if (today < start) {
+                    offset--;
+                    if (offset < -100) break;
+                } else {
+                    const nextCheck = getCycleDates(offset + 1);
+                    if (today < nextCheck.start) {
+                        currentCycleOffset = offset;
+                        break;
+                    }
+                    offset++;
+                    if (offset > 100) break;
+                }
+            }
+
+            if (livePunch.active) {
+                startTimerInterval();
+                document.getElementById('liveLocation').value = livePunch.location || '';
+            }
+            updateTimerUI();
+            renderApp();
+        }
+
+        function resetToCurrentPeriod() { initApp(); }
+        function changePeriod(dir) { currentCycleOffset += dir; renderApp(); }
+
+        function renderApp() {
+            const { start, end } = getCycleDates(currentCycleOffset);
+            
+            const opts = { month: 'short', day: 'numeric', year: 'numeric' };
+            document.getElementById('currentPeriodLabel').innerText = 
+                `${start.toLocaleDateString('es-ES', opts)} - ${end.toLocaleDateString('es-ES', opts)}`;
+
+            const cycleShifts = shifts.filter(s => {
+                const d = new Date(s.date + 'T00:00:00');
+                return d >= start && d <= end;
+            }).sort((a,b) => new Date(b.date) - new Date(a.date));
+
+            let totalMins = 0;
+            cycleShifts.forEach(s => {
+                const [hS, mS] = s.startTime.split(':').map(Number);
+                const [hE, mE] = s.endTime.split(':').map(Number);
+                let mins = ((hE * 60 + mE) - (hS * 60 + mS)) - (parseInt(s.breakMinutes) || 0);
+                if (mins < 0) mins += 24 * 60;
+                if (mins > 0) totalMins += mins;
+            });
+
+            const totalHours = totalMins / 60;
+            const grossPay = totalHours * settings.rate;
+            const { feeAmount, net, feePercent } = calculateNetPay(grossPay);
+
+            document.getElementById('totalGrossPay').innerText = `$${grossPay.toFixed(2)}`;
+            document.getElementById('feeDisplay').innerText = `-$${feeAmount.toFixed(2)} (${feePercent}%)`;
+            document.getElementById('totalNetPay').innerText = `$${net.toFixed(2)}`;
+            document.getElementById('totalPeriodHours').innerText = `${totalHours.toFixed(1)} h`;
+            document.getElementById('shiftCount').innerText = cycleShifts.length;
+
+            renderShiftsList(cycleShifts);
+            renderChart(start, cycleShifts);
+            renderPastCycles();
+        }
+
+        function renderShiftsList(cycleShifts) {
+            const listEl = document.getElementById('shiftsList');
+            if (cycleShifts.length === 0) {
+                listEl.innerHTML = `<div class="text-center py-6 bg-slate-800/40 rounded-xl border border-slate-800 text-slate-400 text-xs">No hay turnos en esta quincena.</div>`;
+                return;
+            }
+
+            listEl.innerHTML = cycleShifts.map(s => {
+                const [hS, mS] = s.startTime.split(':').map(Number);
+                const [hE, mE] = s.endTime.split(':').map(Number);
+                let mins = ((hE * 60 + mE) - (hS * 60 + mS)) - (parseInt(s.breakMinutes) || 0);
+                if (mins < 0) mins += 24 * 60;
+                let hrs = Math.max(0, mins / 60);
+                let pay = hrs * settings.rate;
+
+                const dateObj = new Date(s.date + 'T00:00:00');
+                const dateFormatted = dateObj.toLocaleDateString('es-ES', { weekday: 'short', month: 'short', day: 'numeric' });
+
+                return `
+                    <div class="bg-slate-800 border border-slate-700/70 p-3.5 rounded-xl flex justify-between items-center shadow-sm">
+                        <div class="space-y-0.5">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold text-emerald-400 capitalize">${dateFormatted}</span>
+                                ${s.location ? `<span class="text-[10px] bg-slate-700/80 px-2 py-0.5 rounded text-slate-300"><i class="fa-solid fa-location-dot text-emerald-400 mr-1"></i>${s.location}</span>` : ''}
+                            </div>
+                            <div class="text-sm font-semibold text-slate-200">${s.startTime} - ${s.endTime} <span class="text-xs font-normal text-slate-400">(${hrs.toFixed(1)}h)</span></div>
+                            ${s.notes ? `<div class="text-[11px] text-slate-400 italic">${s.notes}</div>` : ''}
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="text-right">
+                                <div class="text-sm font-bold text-slate-100">$${pay.toFixed(2)}</div>
+                                <div class="text-[10px] text-slate-400">Descanso: ${s.breakMinutes}m</div>
+                            </div>
+                            <div class="flex gap-1 border-l border-slate-700 pl-2">
+                                <button onclick="editShift('${s.id}')" class="text-slate-400 hover:text-slate-200 p-1"><i class="fa-solid fa-pen text-xs"></i></button>
+                                <button onclick="deleteShift('${s.id}')" class="text-red-400 hover:text-red-300 p-1"><i class="fa-solid fa-trash text-xs"></i></button>
+                            </div>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        function renderChart(startDate, cycleShifts) {
+            const ctx = document.getElementById('cycleChart').getContext('2d');
+            const labels = [];
+            const data = [];
+
+            for (let i = 0; i < 14; i++) {
+                const d = new Date(startDate);
+                d.setDate(d.getDate() + i);
+                const dStr = d.toISOString().split('T')[0];
+                labels.push(d.toLocaleDateString('es-ES', { weekday: 'narrow', day: 'numeric' }));
+                
+                const shift = cycleShifts.find(s => s.date === dStr);
+                if (shift) {
+                    const [hS, mS] = shift.startTime.split(':').map(Number);
+                    const [hE, mE] = shift.endTime.split(':').map(Number);
+                    let mins = ((hE * 60 + mE) - (hS * 60 + mS)) - (parseInt(shift.breakMinutes) || 0);
+                    if (mins < 0) mins += 24 * 60;
+                    data.push(Math.max(0, mins / 60));
+                } else {
+                    data.push(0);
+                }
+            }
+
+            if (chartInstance) chartInstance.destroy();
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{ label: 'Horas', data: data, backgroundColor: '#10b981', borderRadius: 6 }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { display: false } },
+                        y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#334155' }, beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        function renderPastCycles() {
+            const listEl = document.getElementById('pastCyclesList');
+            let html = '';
+            
+            for (let i = 1; i <= 5; i++) {
+                const pastOffset = currentCycleOffset - i;
+                const { start, end } = getCycleDates(pastOffset);
+                const opts = { month: 'short', day: 'numeric' };
+                
+                const pastShifts = shifts.filter(s => {
+                    const d = new Date(s.date + 'T00:00:00');
+                    return d >= start && d <= end;
+                });
+
+                let mins = 0;
+                pastShifts.forEach(s => {
+                    const [hS, mS] = s.startTime.split(':').map(Number);
+                    const [hE, mE] = s.endTime.split(':').map(Number);
+                    let m = ((hE * 60 + mE) - (hS * 60 + mS)) - (parseInt(s.breakMinutes) || 0);
+                    if (m < 0) m += 24 * 60;
+                    if (m > 0) mins += m;
+                });
+
+                const hrs = mins / 60;
+                const gross = hrs * settings.rate;
+                const { net } = calculateNetPay(gross);
+
+                html += `
+                    <div class="bg-slate-900/50 p-2.5 rounded-xl border border-slate-700/50 flex justify-between items-center text-xs">
+                        <div>
+                            <span class="font-semibold text-slate-200">${start.toLocaleDateString('es-ES', opts)} - ${end.toLocaleDateString('es-ES', opts)}</span>
+                            <span class="text-slate-400 block">${pastShifts.length} turnos (${hrs.toFixed(1)}h) | Bruto: $${gross.toFixed(2)}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] text-slate-400 block uppercase">Neto</span>
+                            <span class="font-bold text-emerald-400 text-sm">$${net.toFixed(2)}</span>
+                        </div>
+                    </div>`;
+            }
+            listEl.innerHTML = html;
+        }
+
+        function togglePunch() {
+            if (!livePunch.active) {
+                livePunch.active = true;
+                livePunch.startTime = Date.now();
+                livePunch.onBreak = false;
+                livePunch.totalBreakMs = 0;
+                livePunch.location = document.getElementById('liveLocation').value.trim();
+                startTimerInterval();
+            } else {
+                if (confirm('¿Deseas finalizar y guardar este turno?')) {
+                    const now = new Date();
+                    const startObj = new Date(livePunch.startTime);
+                    const dateStr = startObj.toISOString().split('T')[0];
+                    const formatTime = d => d.toTimeString().slice(0,5);
+                    const breakMins = Math.round(livePunch.totalBreakMs / 60000);
+
+                    shifts.push({
+                        id: '_' + Math.random().toString(36).substr(2, 9),
+                        date: dateStr,
+                        startTime: formatTime(startObj),
+                        endTime: formatTime(now),
+                        breakMinutes: breakMins,
+                        location: livePunch.location || '',
+                        notes: 'Registrado con Reloj en Vivo'
+                    });
+
+                    localStorage.setItem('simple_work_shifts', JSON.stringify(shifts));
+                    livePunch = { active: false, startTime: null, onBreak: false, breakStart: null, totalBreakMs: 0, location: '' };
+                    clearInterval(timerInterval);
+                }
+            }
+            localStorage.setItem('simple_live_punch', JSON.stringify(livePunch));
+            updateTimerUI();
+            renderApp();
+        }
+
+        function toggleBreak() {
+            if (!livePunch.active) return;
+            if (!livePunch.onBreak) {
+                livePunch.onBreak = true;
+                livePunch.breakStart = Date.now();
+            } else {
+                livePunch.onBreak = false;
+                livePunch.totalBreakMs += (Date.now() - livePunch.breakStart);
+                livePunch.breakStart = null;
+            }
+            localStorage.setItem('simple_live_punch', JSON.stringify(livePunch));
+            updateTimerUI();
+        }
+
+        function startTimerInterval() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => { updateTimerUI(); }, 1000);
+        }
+
+        function updateTimerUI() {
+            const punchBtn = document.getElementById('punchBtn');
+            const breakBtn = document.getElementById('breakBtn');
+            const statusEl = document.getElementById('clockStatus');
+            const dot = document.getElementById('clockDot');
+
+            if (!livePunch.active) {
+                document.getElementById('timerDisplay').innerText = "00:00:00";
+                document.getElementById('timerPayDisplay').innerText = "$0.00";
+                document.getElementById('punchText').innerText = "Iniciar Fichaje";
+                document.getElementById('punchIcon').className = "fa-solid fa-play";
+                punchBtn.className = "bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-3 rounded-xl shadow transition flex items-center justify-center gap-2 text-sm";
+                breakBtn.disabled = true;
+                breakBtn.className = "bg-amber-600/30 text-slate-500 font-bold py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2 text-sm cursor-not-allowed";
+                statusEl.innerText = "Inactivo";
+                statusEl.className = "text-[11px] font-medium px-2 py-0.5 rounded-full bg-slate-700 text-slate-300";
+                dot.className = "w-2.5 h-2.5 rounded-full bg-slate-500";
+                return;
+            }
+
+            breakBtn.disabled = false;
+            breakBtn.className = "bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2 text-sm";
+
+            let currentBreak = livePunch.totalBreakMs;
+            if (livePunch.onBreak) {
+                currentBreak += (Date.now() - livePunch.breakStart);
+                statusEl.innerText = "En Descanso";
+                statusEl.className = "text-[11px] font-medium px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30";
+                dot.className = "w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse";
+                document.getElementById('breakText').innerText = "Reanudar Turno";
+            } else {
+                statusEl.innerText = "Trabajando";
+                statusEl.className = "text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+                dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse";
+                document.getElementById('breakText').innerText = "Pausar Descanso";
+            }
+
+            document.getElementById('punchText').innerText = "Finalizar Fichaje";
+            document.getElementById('punchIcon').className = "fa-solid fa-square";
+            punchBtn.className = "bg-red-600 hover:bg-red-500 text-white font-bold py-2.5 px-3 rounded-xl shadow transition flex items-center justify-center gap-2 text-sm";
+
+            const elapsedMs = Math.max(0, (Date.now() - livePunch.startTime) - currentBreak);
+            const totalSecs = Math.floor(elapsedMs / 1000);
+            const hrs = Math.floor(totalSecs / 3600);
+            const mins = Math.floor((totalSecs % 3600) / 60);
+            const secs = totalSecs % 60;
+
+            const pad = n => String(n).padStart(2, '0');
+            document.getElementById('timerDisplay').innerText = `${pad(hrs)}:${pad(mins)}:${pad(secs)}`;
+
+            const earnedPay = (elapsedMs / (1000 * 60 * 60)) * settings.rate;
+            document.getElementById('timerPayDisplay').innerText = `$${earnedPay.toFixed(2)}`;
+        }
+
+        function addPresetShift(hours) {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const startTime = "08:00";
+            const [h, m] = startTime.split(':').map(Number);
+            const endHour = (h + hours) % 24;
+            const endTime = `${String(endHour).padStart(2,'0')}:00`;
+
+            shifts.push({
+                id: '_' + Math.random().toString(36).substr(2, 9),
+                date: todayStr,
+                startTime: startTime,
+                endTime: endTime,
+                breakMinutes: 30,
+                location: '',
+                notes: `Turno rápido +${hours}h`
+            });
+
+            localStorage.setItem('simple_work_shifts', JSON.stringify(shifts));
+            renderApp();
+        }
+
+        function openShiftModal(editId = null) {
+            document.getElementById('shiftModal').classList.remove('hidden');
+            if (editId) {
+                document.getElementById('modalTitle').innerText = 'Editar Turno';
+                const s = shifts.find(item => item.id === editId);
+                if (s) {
+                    document.getElementById('shiftId').value = s.id;
+                    document.getElementById('shiftDate').value = s.date;
+                    document.getElementById('startTime').value = s.startTime;
+                    document.getElementById('endTime').value = s.endTime;
+                    document.getElementById('breakMinutes').value = s.breakMinutes;
+                    document.getElementById('shiftLocation').value = s.location || '';
+                    document.getElementById('shiftNotes').value = s.notes || '';
+                }
+            } else {
+                document.getElementById('modalTitle').innerText = 'Registrar Turno';
+                document.getElementById('shiftForm').reset();
+                document.getElementById('shiftId').value = '';
+                document.getElementById('shiftDate').value = new Date().toISOString().split('T')[0];
+            }
+        }
+
+        function closeShiftModal() { document.getElementById('shiftModal').classList.add('hidden'); }
+
+        function saveShift(e) {
+            e.preventDefault();
+            const id = document.getElementById('shiftId').value || '_' + Math.random().toString(36).substr(2, 9);
+            const date = document.getElementById('shiftDate').value;
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+            const breakMinutes = document.getElementById('breakMinutes').value;
+            const location = document.getElementById('shiftLocation').value;
+            const notes = document.getElementById('shiftNotes').value;
+
+            const shiftObj = { id, date, startTime, endTime, breakMinutes, location, notes };
+            const idx = shifts.findIndex(s => s.id === id);
+            
+            if (idx >= 0) shifts[idx] = shiftObj;
+            else shifts.push(shiftObj);
+
+            localStorage.setItem('simple_work_shifts', JSON.stringify(shifts));
+            closeShiftModal();
+            renderApp();
+        }
+
+        function editShift(id) { openShiftModal(id); }
+
+        function deleteShift(id) {
+            if (confirm('¿Eliminar este turno?')) {
+                shifts = shifts.filter(s => s.id !== id);
+                localStorage.setItem('simple_work_shifts', JSON.stringify(shifts));
+                renderApp();
+            }
+        }
+
+        function openSettings() {
+            document.getElementById('hourlyRate').value = settings.rate;
+            document.getElementById('settingsModal').classList.remove('hidden');
+        }
+
+        function closeSettings() { document.getElementById('settingsModal').classList.add('hidden'); }
+
+        function saveSettings() {
+            settings.rate = parseFloat(document.getElementById('hourlyRate').value) || 0;
+            localStorage.setItem('simple_work_settings', JSON.stringify(settings));
+            closeSettings();
+            renderApp();
+        }
+
+        function exportBackup() {
+            const data = { settings, shifts };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `backup_horas_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+        }
+
+        function importBackup(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.settings && data.shifts) {
+                        settings = data.settings;
+                        shifts = data.shifts;
+                        localStorage.setItem('simple_work_settings', JSON.stringify(settings));
+                        localStorage.setItem('simple_work_shifts', JSON.stringify(shifts));
+                        alert('¡Copia de seguridad restaurada con éxito!');
+                        closeSettings();
+                        renderApp();
+                    } else {
+                        alert('El archivo no tiene el formato correcto.');
+                    }
+                } catch (err) {
+                    alert('Error al leer el archivo JSON.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function exportCSV() {
+            if (shifts.length === 0) return alert('No hay datos para exportar');
+            let csv = 'Fecha,Ubicacion,Hora Entrada,Hora Salida,Descanso(Mins),Horas,Pago Bruto,Comision Cheque,Pago Neto\n';
+            shifts.forEach(s => {
+                const [hS, mS] = s.startTime.split(':').map(Number);
+                const [hE, mE] = s.endTime.split(':').map(Number);
+                let mins = ((hE * 60 + mE) - (hS * 60 + mS)) - (parseInt(s.breakMinutes) || 0);
+                if (mins < 0) mins += 24 * 60;
+                let hrs = Math.max(0, mins / 60);
+                let gross = hrs * settings.rate;
+                let { feeAmount, net } = calculateNetPay(gross);
+                csv += `"${s.date}","${s.location || ''}","${s.startTime}","${s.endTime}",${s.breakMinutes},${hrs.toFixed(2)},${gross.toFixed(2)},${feeAmount.toFixed(2)},${net.toFixed(2)}\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `horas_trabajo_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+        }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker registrado', reg))
+                    .catch(err => console.warn('Error al registrar SW', err));
+            });
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
