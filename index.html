@@ -105,16 +105,17 @@
             </div>
 
             <div class="grid grid-cols-2 gap-2 text-center py-1">
-                <div>
+                <div class="flex flex-col items-center justify-center">
                     <span class="text-[11px] text-slate-400 flex items-center justify-center gap-1.5 mb-0.5">
                         Tiempo Transcurrido
                         <button onclick="editLiveStartTime()" id="editLiveBtn" class="hidden text-slate-500 hover:text-emerald-400 transition" title="Editar hora de inicio"><i class="fa-solid fa-pen text-[10px]"></i></button>
                     </span>
-                    <span id="timerDisplay" class="text-2xl font-mono font-bold text-slate-100">00:00:00</span>
+                    <span id="timerDisplay" class="text-2xl font-mono font-bold text-slate-100 leading-none">00:00:00</span>
+                    <span id="breakTimerDisplay" class="hidden"></span>
                 </div>
-                <div>
+                <div class="flex flex-col items-center justify-center">
                     <span class="text-[11px] text-slate-400 block mb-0.5">Ganancia Bruta</span>
-                    <span id="timerPayDisplay" class="text-2xl font-mono font-bold text-emerald-400">$0.00</span>
+                    <span id="timerPayDisplay" class="text-2xl font-mono font-bold text-emerald-400 leading-none">$0.00</span>
                 </div>
             </div>
 
@@ -401,7 +402,7 @@
             document.getElementById('feeDisplay').innerText = `-$${feeAmount.toFixed(2)} (${feePercent}%)`;
             document.getElementById('totalNetPay').innerText = `$${net.toFixed(2)}`;
             document.getElementById('totalPeriodHours').innerText = `${totalHours.toFixed(1)} h`;
-            document.getElementById('shiftCount').innerText = workedShiftsCount; // Solo cuenta días trabajados
+            document.getElementById('shiftCount').innerText = workedShiftsCount; 
 
             renderShiftsList(cycleShifts);
             renderChart(start, cycleShifts);
@@ -419,7 +420,6 @@
                 const dateObj = new Date(s.date + 'T00:00:00');
                 const dateFormatted = dateObj.toLocaleDateString('es-ES', { weekday: 'short', month: 'short', day: 'numeric' });
 
-                // Render especial si es día libre
                 if (s.isDayOff) {
                     return `
                     <div class="bg-slate-800/40 border border-slate-700/40 p-3.5 rounded-xl flex justify-between items-center shadow-sm opacity-80">
@@ -437,7 +437,6 @@
                     </div>`;
                 }
 
-                // Render normal para días trabajados
                 const [hS, mS] = s.startTime.split(':').map(Number);
                 const [hE, mE] = s.endTime.split(':').map(Number);
                 let mins = ((hE * 60 + mE) - (hS * 60 + mS)) - (parseInt(s.breakMinutes) || 0);
@@ -445,7 +444,6 @@
                 let hrs = Math.max(0, mins / 60);
                 let pay = hrs * settings.rate;
 
-                // Formato de hora de descanso si existe
                 let breakText = `Descanso: ${s.breakMinutes}m`;
                 if (s.breakStartTime && s.breakEndTime) {
                     breakText = `${s.breakStartTime} - ${s.breakEndTime} (${s.breakMinutes}m)`;
@@ -643,6 +641,8 @@
             const statusEl = document.getElementById('clockStatus');
             const dot = document.getElementById('clockDot');
             const editBtn = document.getElementById('editLiveBtn');
+            const breakTimerEl = document.getElementById('breakTimerDisplay');
+            const pad = n => String(n).padStart(2, '0');
 
             if (!livePunch.active) {
                 document.getElementById('timerDisplay').innerText = "00:00:00";
@@ -656,6 +656,7 @@
                 statusEl.className = "text-[11px] font-medium px-2 py-0.5 rounded-full bg-slate-700 text-slate-300";
                 dot.className = "w-2.5 h-2.5 rounded-full bg-slate-500";
                 if(editBtn) editBtn.classList.add('hidden');
+                if(breakTimerEl) breakTimerEl.classList.add('hidden');
                 return;
             }
 
@@ -677,6 +678,31 @@
                 document.getElementById('breakText').innerText = "Pausar Descanso";
             }
 
+            // --- NUEVO: Mostrar el tiempo de descanso ---
+            if (currentBreak > 0) {
+                if (breakTimerEl) {
+                    breakTimerEl.classList.remove('hidden');
+                    const bTotalSecs = Math.floor(currentBreak / 1000);
+                    const bHrs = Math.floor(bTotalSecs / 3600);
+                    const bMins = Math.floor((bTotalSecs % 3600) / 60);
+                    const bSecs = bTotalSecs % 60;
+                    
+                    let bText = `${pad(bMins)}:${pad(bSecs)}`;
+                    if (bHrs > 0) bText = `${pad(bHrs)}:${bText}`;
+                    
+                    breakTimerEl.innerText = `Descanso: ${bText}`;
+                    
+                    if (livePunch.onBreak) {
+                        breakTimerEl.className = "text-[10px] text-amber-400 font-medium bg-amber-400/10 px-2 py-0.5 rounded-full border border-amber-400/20 inline-block mt-1";
+                    } else {
+                        breakTimerEl.className = "text-[10px] text-slate-500 font-medium inline-block mt-1";
+                    }
+                }
+            } else {
+                if (breakTimerEl) breakTimerEl.classList.add('hidden');
+            }
+            // ---------------------------------------------
+
             document.getElementById('punchText').innerText = "Finalizar Fichaje";
             document.getElementById('punchIcon').className = "fa-solid fa-square";
             punchBtn.className = "bg-red-600 hover:bg-red-500 text-white font-bold py-2.5 px-3 rounded-xl shadow transition flex items-center justify-center gap-2 text-sm";
@@ -687,7 +713,6 @@
             const mins = Math.floor((totalSecs % 3600) / 60);
             const secs = totalSecs % 60;
 
-            const pad = n => String(n).padStart(2, '0');
             document.getElementById('timerDisplay').innerText = `${pad(hrs)}:${pad(mins)}:${pad(secs)}`;
 
             const earnedPay = (elapsedMs / (1000 * 60 * 60)) * settings.rate;
@@ -782,7 +807,6 @@
             const isDayOff = document.getElementById('isDayOff').checked;
 
             if (isDayOff) {
-                // Configurar datos para día libre
                 startTime = "00:00";
                 endTime = "00:00";
                 breakMinutes = 0;
@@ -790,7 +814,6 @@
                 breakEndTime = "";
                 if (!notes) notes = "Día Libre";
             } else if (!endTime) {
-                // Logica de iniciar reloj en vivo si falta hora de salida
                 if (livePunch.active) {
                     alert('Ya hay un reloj en vivo activo. Finalízalo primero.');
                     return;
