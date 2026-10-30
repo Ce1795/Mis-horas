@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control de Horas y Pagos Quincenales</title>
+    <title>Control de Horas y Billetera</title>
     
     <!-- PWA -->
     <link rel="manifest" href="manifest.json">
@@ -19,17 +19,23 @@
 <body class="bg-slate-900 text-slate-100 min-h-screen pb-16 font-sans select-none">
 
     <!-- Header / Barra Superior -->
-    <header class="bg-slate-800/90 backdrop-blur-md border-b border-slate-700/60 sticky top-0 z-40 px-4 py-3 shadow-lg">
-        <div class="max-w-md mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-2.5">
-                <div class="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
-                    <i class="fa-solid fa-business-time text-lg"></i>
-                </div>
-                <div>
-                    <h1 class="text-base font-bold leading-tight">Mis Horas & Pagos</h1>
-                    <p class="text-[11px] text-slate-400">Ciclo Quincenal (Vie - Jue)</p>
-                </div>
+    <header class="bg-slate-800/90 backdrop-blur-md border-b border-slate-700/60 sticky top-0 z-40 px-4 py-3 shadow-lg flex justify-between items-center">
+        <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+                <i class="fa-solid fa-clock text-lg"></i>
             </div>
+            <div>
+                <h1 class="text-base font-bold leading-tight">Mis Horas</h1>
+                <p class="text-[11px] text-slate-400">Ciclo Quincenal (Vie - Jue)</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-2">
+            <!-- Widget de Billetera (Independiente) -->
+            <button onclick="openWalletModal()" class="bg-slate-900/80 hover:bg-slate-700 border border-slate-600/50 px-3 py-1.5 rounded-xl text-right transition group">
+                <span class="block text-[9px] text-slate-400 uppercase font-medium leading-none mb-0.5 group-hover:text-slate-300">Mi Billetera <i class="fa-solid fa-pen text-[8px] ml-1"></i></span>
+                <span id="walletHeaderAmount" class="block text-sm font-bold text-emerald-400 leading-none">$0.00</span>
+            </button>
             <button onclick="openSettings()" class="bg-slate-700/60 hover:bg-slate-600 p-2.5 rounded-xl text-slate-200 transition border border-slate-600/50">
                 <i class="fa-solid fa-gear"></i>
             </button>
@@ -61,22 +67,23 @@
                 Cargando fechas...
             </div>
 
-            <!-- Desglose Financiero -->
+            <!-- Desglose Financiero (Solo Horas) -->
             <div class="space-y-2 mb-4">
-                <div class="bg-slate-900/80 rounded-xl p-3.5 border border-slate-700/50 flex justify-between items-center">
+                <div class="bg-slate-900/80 rounded-xl p-3 border border-slate-700/50 flex justify-between items-center">
                     <div>
-                        <span class="text-[11px] text-slate-400 block uppercase font-medium">Pago Bruto (Total Horas)</span>
-                        <span id="totalGrossPay" class="text-xl font-bold text-slate-100">$0.00</span>
+                        <span class="text-[10px] text-slate-400 block uppercase font-medium">Pago Bruto</span>
+                        <span id="totalGrossPay" class="text-lg font-bold text-slate-100">$0.00</span>
                     </div>
                     <div class="text-right">
-                        <span class="text-[11px] text-slate-400 block uppercase font-medium">Comisión Cheque</span>
-                        <span id="feeDisplay" class="text-sm font-semibold text-amber-400">-$0.00 (1%)</span>
+                        <span class="text-[10px] text-slate-400 block uppercase font-medium">Comisión Cheque</span>
+                        <span id="feeDisplay" class="text-xs font-semibold text-amber-400">-$0.00 (1%)</span>
                     </div>
                 </div>
 
                 <div class="bg-emerald-950/40 rounded-xl p-4 border border-emerald-500/30 text-center shadow-inner">
-                    <span class="text-xs text-emerald-400 uppercase tracking-wider font-bold">Pago Neto Estimado (En Mano)</span>
+                    <span class="text-xs text-emerald-400 uppercase tracking-wider font-bold">Pago Neto Estimado</span>
                     <div id="totalNetPay" class="text-4xl font-extrabold text-emerald-400 mt-1">$0.00</div>
+                    <span class="text-[10px] text-slate-400 block mt-1">(Solo dinero de las horas)</span>
                 </div>
             </div>
 
@@ -86,7 +93,7 @@
                     <span id="totalPeriodHours" class="text-xl font-bold text-slate-100">0.0 h</span>
                 </div>
                 <div class="bg-slate-900/40 p-3 rounded-xl border border-slate-800">
-                    <span class="text-xs text-slate-400 block mb-0.5">Turnos</span>
+                    <span class="text-xs text-slate-400 block mb-0.5">Turnos Trabajados</span>
                     <span id="shiftCount" class="text-xl font-bold text-slate-100">0</span>
                 </div>
             </div>
@@ -97,7 +104,7 @@
             <div class="flex justify-between items-center border-b border-slate-700/50 pb-2">
                 <span class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
                     <span class="w-2.5 h-2.5 rounded-full bg-slate-500" id="clockDot"></span>
-                    Reloj de Fichaje En Vivo
+                    Reloj de Fichaje
                 </span>
                 <span id="clockStatus" class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-slate-700 text-slate-300">
                     Inactivo
@@ -134,7 +141,7 @@
             </div>
         </section>
 
-        <!-- Presets y Botón Manual -->
+        <!-- Presets -->
         <section class="space-y-2">
             <div class="flex justify-between items-center">
                 <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Atajos Rápidos</span>
@@ -155,22 +162,42 @@
             </div>
         </section>
 
-        <!-- Gráfico de Horas -->
-        <section class="bg-slate-800/80 border border-slate-700/70 rounded-2xl p-4 shadow-lg">
-            <h3 class="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-3">
-                <i class="fa-solid fa-chart-column text-emerald-400 mr-1"></i> Distribución del Ciclo
-            </h3>
-            <div class="h-40">
-                <canvas id="cycleChart"></canvas>
+        <!-- CONTROL DE GASTOS Y BILLETERA -->
+        <section class="bg-slate-800/80 border border-slate-700/70 rounded-2xl p-4 shadow-lg space-y-4 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+            
+            <div class="flex justify-between items-center border-b border-slate-700/50 pb-2 relative z-10">
+                <h3 class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-wallet text-emerald-400"></i> Gastos y Billetera
+                </h3>
+                <button onclick="openTransactionModal()" class="text-[11px] bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 rounded-lg text-white font-semibold transition flex items-center gap-1 shadow-md">
+                    <i class="fa-solid fa-plus"></i> Gasto / Ingreso
+                </button>
+            </div>
+
+            <!-- Resumen de Movimientos del Período -->
+            <div class="grid grid-cols-2 gap-2 text-center relative z-10">
+                <div class="bg-slate-900/50 p-2 rounded-xl border border-slate-700/30">
+                    <span class="text-[10px] text-slate-400 block uppercase">Ingresó a Cartera (Quincena)</span>
+                    <span id="accIncome" class="text-sm font-bold text-emerald-400">+$0.00</span>
+                </div>
+                <div class="bg-slate-900/50 p-2 rounded-xl border border-slate-700/30">
+                    <span class="text-[10px] text-slate-400 block uppercase">Gastado de Cartera (Quincena)</span>
+                    <span id="accExpense" class="text-sm font-bold text-rose-400">-$0.00</span>
+                </div>
+            </div>
+
+            <div id="transactionsList" class="space-y-2 max-h-48 overflow-y-auto pr-1 relative z-10">
+                <!-- Se llena con JS -->
             </div>
         </section>
 
-        <!-- Lista de Turnos del Período -->
+        <!-- Lista de Turnos -->
         <section class="space-y-3">
             <div class="flex justify-between items-center">
-                <h3 class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Historial del Período</h3>
-                <button onclick="exportCSV()" class="text-xs text-slate-400 hover:text-slate-200 transition flex items-center gap-1">
-                    <i class="fa-solid fa-file-csv"></i> Exportar CSV
+                <h3 class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Historial de Turnos</h3>
+                <button onclick="exportCSV()" class="text-[11px] text-slate-400 hover:text-slate-200 transition flex items-center gap-1">
+                    <i class="fa-solid fa-file-csv"></i> Exportar
                 </button>
             </div>
             <div id="shiftsList" class="space-y-2.5">
@@ -178,17 +205,90 @@
             </div>
         </section>
 
-        <!-- Sección de Quincenas Pasadas -->
-        <section class="bg-slate-800/80 border border-slate-700/70 rounded-2xl p-4 shadow-lg space-y-3">
-            <h3 class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
-                <i class="fa-solid fa-clock-rotate-left text-emerald-400"></i> Resumen de Quincenas Pasadas
+        <!-- Gráfico de Horas -->
+        <section class="bg-slate-800/40 border border-slate-700/40 rounded-2xl p-4 shadow-sm">
+            <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+                <i class="fa-solid fa-chart-column mr-1"></i> Distribución
             </h3>
-            <div id="pastCyclesList" class="space-y-2 max-h-48 overflow-y-auto">
-                <!-- Se llena con JS -->
+            <div class="h-32">
+                <canvas id="cycleChart"></canvas>
             </div>
         </section>
 
     </main>
+
+    <!-- Modal Editar Billetera -->
+    <div id="walletModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-slate-800 w-full max-w-sm rounded-t-3xl sm:rounded-2xl border border-slate-700 p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
+                    <i class="fa-solid fa-wallet text-emerald-400"></i> Mi Billetera
+                </h3>
+                <button onclick="closeWalletModal()" class="text-slate-400 hover:text-slate-200 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <p class="text-xs text-slate-400 text-center">Este dinero es independiente de tus horas trabajadas. Actualiza cuánto efectivo traes en este momento.</p>
+            
+            <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700 flex flex-col items-center">
+                <label class="text-[11px] text-slate-400 uppercase font-bold tracking-wider mb-2">Efectivo Actual</label>
+                <div class="flex items-center text-4xl font-black text-emerald-400">
+                    <span class="mr-1">$</span>
+                    <input type="number" id="walletInputAmount" step="0.01" class="bg-transparent w-32 text-center focus:outline-none border-b-2 border-slate-700 focus:border-emerald-500 pb-1" value="0.00">
+                </div>
+            </div>
+
+            <button onclick="saveWalletAmount()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-xl transition shadow-md text-sm mt-2">
+                Fijar Monto en Billetera
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal Transacción Contable (Gastos de Billetera) -->
+    <div id="transactionModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-2xl border border-slate-700 p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 id="transModalTitle" class="text-base font-bold text-slate-100">Movimiento de Billetera</h3>
+                <button onclick="closeTransactionModal()" class="text-slate-400 hover:text-slate-200 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <form id="transForm" onsubmit="saveTransaction(event)" class="space-y-4">
+                <input type="hidden" id="transId">
+                <!-- Guardamos si esta transacción ya había afectado la billetera -->
+                <input type="hidden" id="transOldAmount" value="0">
+                <input type="hidden" id="transOldType" value="expense">
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Fecha</label>
+                        <input type="date" id="transDate" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Tipo</label>
+                        <select id="transType" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
+                            <option value="expense">Gasté Dinero (-)</option>
+                            <option value="income">Entró Efectivo (+)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Monto ($)</label>
+                    <input type="number" id="transAmount" required step="0.01" min="0.01" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm" placeholder="0.00">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Concepto / Descripción</label>
+                    <input type="text" id="transConcept" required placeholder="Ej. Gasolina, Comida, Me pagaron..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
+                </div>
+
+                <p class="text-[10px] text-slate-400 text-center italic mt-2"><i class="fa-solid fa-circle-info"></i> Este movimiento sumará o restará automáticamente de tu Billetera principal.</p>
+
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-xl transition shadow-md text-sm">
+                    Guardar Movimiento
+                </button>
+            </form>
+        </div>
+    </div>
 
     <!-- Modal Entrada Manual / Editar Turno -->
     <div id="shiftModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
@@ -206,13 +306,11 @@
                     <input type="date" id="shiftDate" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
                 </div>
 
-                <!-- Checkbox Día Libre -->
                 <div class="flex items-center gap-2 bg-slate-900/50 p-2.5 rounded-xl border border-slate-700/50">
                     <input type="checkbox" id="isDayOff" onchange="toggleDayOffUI()" class="w-4 h-4 rounded text-emerald-500 bg-slate-900 border-slate-700 focus:ring-emerald-500">
                     <label for="isDayOff" class="text-sm font-medium text-slate-200">Marcar como Día Libre ⛱️</label>
                 </div>
 
-                <!-- Grupo de campos de tiempo (se oculta si es día libre) -->
                 <div id="timeInputsGroup" class="space-y-4">
                     <div class="grid grid-cols-2 gap-3">
                         <div>
@@ -226,7 +324,6 @@
                         </div>
                     </div>
 
-                    <!-- Horas de descanso -->
                     <div class="bg-slate-900/30 p-3 rounded-xl border border-slate-700/50">
                         <label class="block text-xs font-medium text-slate-300 mb-2">Horario de Descanso (Opcional)</label>
                         <div class="grid grid-cols-2 gap-3 mb-2">
@@ -279,10 +376,10 @@
                     <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Copia de Seguridad (Backup)</span>
                     <div class="grid grid-cols-2 gap-2">
                         <button onclick="exportBackup()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold py-2.5 px-3 rounded-xl text-xs transition flex items-center justify-center gap-1.5">
-                            <i class="fa-solid fa-download"></i> Exportar JSON
+                            <i class="fa-solid fa-download"></i> Guardar Todo
                         </button>
                         <label class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold py-2.5 px-3 rounded-xl text-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
-                            <i class="fa-solid fa-upload"></i> Importar JSON
+                            <i class="fa-solid fa-upload"></i> Cargar Backup
                             <input type="file" id="importFile" accept=".json" onchange="importBackup(event)" class="hidden">
                         </label>
                     </div>
@@ -299,6 +396,8 @@
     <script>
         let settings = JSON.parse(localStorage.getItem('simple_work_settings')) || { rate: 20.00 };
         let shifts = JSON.parse(localStorage.getItem('simple_work_shifts')) || [];
+        let transactions = JSON.parse(localStorage.getItem('simple_work_transactions')) || []; 
+        let walletAmount = parseFloat(localStorage.getItem('simple_work_wallet')) || 0.00; // NUEVO: Billetera Global
 
         const baseCycleStart = new Date('2026-10-30T00:00:00');
         let currentCycleOffset = 0;
@@ -324,14 +423,10 @@
 
         function calculateNetPay(gross) {
             let feeRate = 0;
-            if (gross <= 1999) {
-                feeRate = 0.01; // 1%
-            } else {
-                feeRate = 0.02; // 2%
-            }
+            if (gross <= 1999) feeRate = 0.01;
+            else feeRate = 0.02;
             const feeAmount = gross * feeRate;
-            const net = gross - feeAmount;
-            return { feeAmount, net, feePercent: feeRate * 100 };
+            return { feeAmount, net: gross - feeAmount, feePercent: feeRate * 100 };
         }
 
         function initApp() {
@@ -371,16 +466,25 @@
 
         function renderApp() {
             const { start, end } = getCycleDates(currentCycleOffset);
-            
             const opts = { month: 'short', day: 'numeric', year: 'numeric' };
-            document.getElementById('currentPeriodLabel').innerText = 
-                `${start.toLocaleDateString('es-ES', opts)} - ${end.toLocaleDateString('es-ES', opts)}`;
+            document.getElementById('currentPeriodLabel').innerText = `${start.toLocaleDateString('es-ES', opts)} - ${end.toLocaleDateString('es-ES', opts)}`;
 
+            // Actualizar Billetera Global
+            document.getElementById('walletHeaderAmount').innerText = `$${walletAmount.toFixed(2)}`;
+
+            // Filtro de turnos
             const cycleShifts = shifts.filter(s => {
                 const d = new Date(s.date + 'T00:00:00');
                 return d >= start && d <= end;
             }).sort((a,b) => new Date(b.date) - new Date(a.date));
 
+            // Filtro de transacciones de la quincena (solo para vista)
+            const cycleTrans = transactions.filter(t => {
+                const d = new Date(t.date + 'T00:00:00');
+                return d >= start && d <= end;
+            }).sort((a,b) => new Date(b.date) - new Date(a.date));
+
+            // Cálculos de Horas
             let totalMins = 0;
             let workedShiftsCount = 0;
             cycleShifts.forEach(s => {
@@ -398,16 +502,158 @@
             const grossPay = totalHours * settings.rate;
             const { feeAmount, net, feePercent } = calculateNetPay(grossPay);
 
+            // Cálculos Contables (Para vista de quincena)
+            let tIncome = 0, tExpense = 0;
+            cycleTrans.forEach(t => {
+                if (t.type === 'income') tIncome += parseFloat(t.amount);
+                else tExpense += parseFloat(t.amount);
+            });
+
+            // Update UI Principal
             document.getElementById('totalGrossPay').innerText = `$${grossPay.toFixed(2)}`;
             document.getElementById('feeDisplay').innerText = `-$${feeAmount.toFixed(2)} (${feePercent}%)`;
             document.getElementById('totalNetPay').innerText = `$${net.toFixed(2)}`;
             document.getElementById('totalPeriodHours').innerText = `${totalHours.toFixed(1)} h`;
             document.getElementById('shiftCount').innerText = workedShiftsCount; 
 
+            // Update Secciones
             renderShiftsList(cycleShifts);
+            renderTransactionsList(cycleTrans, tIncome, tExpense);
             renderChart(start, cycleShifts);
-            renderPastCycles();
         }
+
+        // ---- MÓDULO BILLETERA ----
+        function openWalletModal() {
+            document.getElementById('walletInputAmount').value = walletAmount.toFixed(2);
+            document.getElementById('walletModal').classList.remove('hidden');
+        }
+
+        function closeWalletModal() {
+            document.getElementById('walletModal').classList.add('hidden');
+        }
+
+        function saveWalletAmount() {
+            walletAmount = parseFloat(document.getElementById('walletInputAmount').value) || 0;
+            localStorage.setItem('simple_work_wallet', walletAmount);
+            closeWalletModal();
+            renderApp();
+        }
+
+        // ---- MÓDULO CONTABLE: FUNCIONES ----
+        function renderTransactionsList(cycleTrans, tIncome, tExpense) {
+            document.getElementById('accIncome').innerText = `+$${tIncome.toFixed(2)}`;
+            document.getElementById('accExpense').innerText = `-$${tExpense.toFixed(2)}`;
+
+            const listEl = document.getElementById('transactionsList');
+            if (cycleTrans.length === 0) {
+                listEl.innerHTML = `<div class="text-center py-4 bg-slate-900/40 rounded-xl border border-slate-800 text-slate-500 text-[11px]">Sin movimientos de billetera esta quincena.</div>`;
+                return;
+            }
+
+            listEl.innerHTML = cycleTrans.map(t => {
+                const dateObj = new Date(t.date + 'T00:00:00');
+                const dateFormatted = dateObj.toLocaleDateString('es-ES', { weekday: 'short', month: 'short', day: 'numeric' });
+                const isInc = t.type === 'income';
+                const sign = isInc ? '+' : '-';
+                const color = isInc ? 'text-emerald-400' : 'text-rose-400';
+                const icon = isInc ? 'fa-arrow-trend-up' : 'fa-receipt';
+
+                return `
+                    <div class="bg-slate-900/60 border border-slate-700/50 p-2.5 rounded-xl flex justify-between items-center shadow-sm">
+                        <div class="flex items-center gap-3 overflow-hidden">
+                            <div class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center shrink-0">
+                                <i class="fa-solid ${icon} ${color} text-xs"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <div class="text-xs font-semibold text-slate-200 truncate">${t.concept}</div>
+                                <div class="text-[10px] text-slate-400 capitalize">${dateFormatted}</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 shrink-0 pl-2">
+                            <div class="text-sm font-bold ${color}">${sign}$${parseFloat(t.amount).toFixed(2)}</div>
+                            <div class="flex gap-1 border-l border-slate-700 pl-2">
+                                <button onclick="editTransaction('${t.id}')" class="text-slate-500 hover:text-slate-300 p-1"><i class="fa-solid fa-pen text-[10px]"></i></button>
+                                <button onclick="deleteTransaction('${t.id}')" class="text-red-500/70 hover:text-red-400 p-1"><i class="fa-solid fa-trash text-[10px]"></i></button>
+                            </div>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        function openTransactionModal(editId = null) {
+            document.getElementById('transactionModal').classList.remove('hidden');
+            if (editId) {
+                document.getElementById('transModalTitle').innerText = 'Editar Movimiento';
+                const t = transactions.find(item => item.id === editId);
+                if (t) {
+                    document.getElementById('transId').value = t.id;
+                    document.getElementById('transDate').value = t.date;
+                    document.getElementById('transType').value = t.type;
+                    document.getElementById('transAmount').value = t.amount;
+                    document.getElementById('transConcept').value = t.concept;
+                    document.getElementById('transOldAmount').value = t.amount;
+                    document.getElementById('transOldType').value = t.type;
+                }
+            } else {
+                document.getElementById('transModalTitle').innerText = 'Nuevo Movimiento';
+                document.getElementById('transForm').reset();
+                document.getElementById('transId').value = '';
+                document.getElementById('transOldAmount').value = '0';
+                document.getElementById('transDate').value = new Date().toISOString().split('T')[0];
+                document.getElementById('transType').value = 'expense';
+            }
+        }
+
+        function closeTransactionModal() { document.getElementById('transactionModal').classList.add('hidden'); }
+
+        function saveTransaction(e) {
+            e.preventDefault();
+            const id = document.getElementById('transId').value || 'tx_' + Math.random().toString(36).substr(2, 9);
+            const date = document.getElementById('transDate').value;
+            const type = document.getElementById('transType').value;
+            const amount = parseFloat(document.getElementById('transAmount').value);
+            const concept = document.getElementById('transConcept').value;
+            
+            const oldAmount = parseFloat(document.getElementById('transOldAmount').value) || 0;
+            const oldType = document.getElementById('transOldType').value;
+
+            // Revertimos el efecto en la billetera de la cantidad vieja (si existía)
+            if (oldAmount > 0) {
+                if (oldType === 'income') walletAmount -= oldAmount;
+                else walletAmount += oldAmount;
+            }
+
+            // Aplicamos el nuevo efecto a la billetera
+            if (type === 'income') walletAmount += amount;
+            else walletAmount -= amount;
+
+            const txObj = { id, date, type, amount, concept };
+            const idx = transactions.findIndex(t => t.id === id);
+            if (idx >= 0) transactions[idx] = txObj;
+            else transactions.push(txObj);
+
+            localStorage.setItem('simple_work_transactions', JSON.stringify(transactions));
+            localStorage.setItem('simple_work_wallet', walletAmount); // Guardamos la billetera
+            closeTransactionModal();
+            renderApp();
+        }
+
+        function editTransaction(id) { openTransactionModal(id); }
+        
+        function deleteTransaction(id) {
+            if (confirm('¿Eliminar este movimiento? (Se revertirá de tu billetera)')) {
+                const t = transactions.find(item => item.id === id);
+                if (t) {
+                    if (t.type === 'income') walletAmount -= parseFloat(t.amount);
+                    else walletAmount += parseFloat(t.amount);
+                    localStorage.setItem('simple_work_wallet', walletAmount);
+                }
+                transactions = transactions.filter(item => item.id !== id);
+                localStorage.setItem('simple_work_transactions', JSON.stringify(transactions));
+                renderApp();
+            }
+        }
+        // ----------------------------------------------
 
         function renderShiftsList(cycleShifts) {
             const listEl = document.getElementById('shiftsList');
@@ -513,52 +759,6 @@
                     }
                 }
             });
-        }
-
-        function renderPastCycles() {
-            const listEl = document.getElementById('pastCyclesList');
-            let html = '';
-            
-            for (let i = 1; i <= 5; i++) {
-                const pastOffset = currentCycleOffset - i;
-                const { start, end } = getCycleDates(pastOffset);
-                const opts = { month: 'short', day: 'numeric' };
-                
-                const pastShifts = shifts.filter(s => {
-                    const d = new Date(s.date + 'T00:00:00');
-                    return d >= start && d <= end;
-                });
-
-                let mins = 0;
-                let workedShiftsCount = 0;
-                pastShifts.forEach(s => {
-                    if(!s.isDayOff) {
-                        const [hS, mS] = s.startTime.split(':').map(Number);
-                        const [hE, mE] = s.endTime.split(':').map(Number);
-                        let m = ((hE * 60 + mE) - (hS * 60 + mS)) - (parseInt(s.breakMinutes) || 0);
-                        if (m < 0) m += 24 * 60;
-                        if (m > 0) mins += m;
-                        workedShiftsCount++;
-                    }
-                });
-
-                const hrs = mins / 60;
-                const gross = hrs * settings.rate;
-                const { net } = calculateNetPay(gross);
-
-                html += `
-                    <div class="bg-slate-900/50 p-2.5 rounded-xl border border-slate-700/50 flex justify-between items-center text-xs">
-                        <div>
-                            <span class="font-semibold text-slate-200">${start.toLocaleDateString('es-ES', opts)} - ${end.toLocaleDateString('es-ES', opts)}</span>
-                            <span class="text-slate-400 block">${workedShiftsCount} turnos (${hrs.toFixed(1)}h) | Bruto: $${gross.toFixed(2)}</span>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-[10px] text-slate-400 block uppercase">Neto</span>
-                            <span class="font-bold text-emerald-400 text-sm">$${net.toFixed(2)}</span>
-                        </div>
-                    </div>`;
-            }
-            listEl.innerHTML = html;
         }
 
         function togglePunch() {
@@ -678,7 +878,6 @@
                 document.getElementById('breakText').innerText = "Pausar Descanso";
             }
 
-            // --- NUEVO: Mostrar el tiempo de descanso ---
             if (currentBreak > 0) {
                 if (breakTimerEl) {
                     breakTimerEl.classList.remove('hidden');
@@ -691,7 +890,6 @@
                     if (bHrs > 0) bText = `${pad(bHrs)}:${bText}`;
                     
                     breakTimerEl.innerText = `Descanso: ${bText}`;
-                    
                     if (livePunch.onBreak) {
                         breakTimerEl.className = "text-[10px] text-amber-400 font-medium bg-amber-400/10 px-2 py-0.5 rounded-full border border-amber-400/20 inline-block mt-1";
                     } else {
@@ -701,7 +899,6 @@
             } else {
                 if (breakTimerEl) breakTimerEl.classList.add('hidden');
             }
-            // ---------------------------------------------
 
             document.getElementById('punchText').innerText = "Finalizar Fichaje";
             document.getElementById('punchIcon').className = "fa-solid fa-square";
@@ -719,7 +916,6 @@
             document.getElementById('timerPayDisplay').innerText = `$${earnedPay.toFixed(2)}`;
         }
 
-        // ---- NUEVAS FUNCIONES PARA DESCANSOS Y DÍAS LIBRES ----
         function toggleDayOffUI() {
             const isOff = document.getElementById('isDayOff').checked;
             document.getElementById('timeInputsGroup').style.display = isOff ? 'none' : 'block';
@@ -737,7 +933,6 @@
                 document.getElementById('breakMinutes').value = mins;
             }
         }
-        // --------------------------------------------------------
 
         function addPresetShift(hours) {
             const todayStr = new Date().toISOString().split('T')[0];
@@ -877,12 +1072,12 @@
         }
 
         function exportBackup() {
-            const data = { settings, shifts };
+            const data = { settings, shifts, transactions, walletAmount };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `backup_horas_${new Date().toISOString().split('T')[0]}.json`;
+            a.download = `backup_completo_${new Date().toISOString().split('T')[0]}.json`;
             a.click();
         }
 
@@ -896,8 +1091,12 @@
                     if (data.settings && data.shifts) {
                         settings = data.settings;
                         shifts = data.shifts;
+                        transactions = data.transactions || [];
+                        walletAmount = data.walletAmount || 0;
                         localStorage.setItem('simple_work_settings', JSON.stringify(settings));
                         localStorage.setItem('simple_work_shifts', JSON.stringify(shifts));
+                        localStorage.setItem('simple_work_transactions', JSON.stringify(transactions));
+                        localStorage.setItem('simple_work_wallet', walletAmount);
                         alert('¡Copia de seguridad restaurada con éxito!');
                         closeSettings();
                         renderApp();
@@ -912,11 +1111,14 @@
         }
 
         function exportCSV() {
-            if (shifts.length === 0) return alert('No hay datos para exportar');
-            let csv = 'Fecha,Dia Libre,Ubicacion,Hora Entrada,Hora Salida,Inicio Descanso,Fin Descanso,Descanso(Mins),Horas,Pago Bruto,Comision Cheque,Pago Neto\n';
+            if (shifts.length === 0 && transactions.length === 0) return alert('No hay datos para exportar');
+            
+            let csv = '---- REPORTE QUINCENAL ----\n\n';
+            csv += 'TURNOS TRABAJADOS\n';
+            csv += 'Fecha,Dia Libre,Ubicacion,Hora Entrada,Hora Salida,Inicio Descanso,Fin Descanso,Descanso(Mins),Horas,Pago Bruto,Comision Cheque,Pago Neto\n';
+            
             shifts.forEach(s => {
                 let hrs = 0, gross = 0, feeAmount = 0, net = 0;
-                
                 if (!s.isDayOff) {
                     const [hS, mS] = s.startTime.split(':').map(Number);
                     const [hE, mE] = s.endTime.split(':').map(Number);
@@ -928,15 +1130,20 @@
                     feeAmount = payCalc.feeAmount;
                     net = payCalc.net;
                 }
-
                 csv += `"${s.date}","${s.isDayOff ? 'Si' : 'No'}","${s.location || ''}","${s.startTime}","${s.endTime}","${s.breakStartTime || ''}","${s.breakEndTime || ''}",${s.breakMinutes},${hrs.toFixed(2)},${gross.toFixed(2)},${feeAmount.toFixed(2)},${net.toFixed(2)}\n`;
+            });
+
+            csv += '\nMOVIMIENTOS DE BILLETERA\n';
+            csv += 'Fecha,Tipo,Monto,Concepto\n';
+            transactions.forEach(t => {
+                csv += `"${t.date}","${t.type === 'income' ? 'Ingreso' : 'Gasto'}","${t.amount}","${t.concept}"\n`;
             });
 
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `horas_trabajo_${new Date().toISOString().split('T')[0]}.csv`;
+            a.download = `reporte_completo_${new Date().toISOString().split('T')[0]}.csv`;
             a.click();
         }
 
