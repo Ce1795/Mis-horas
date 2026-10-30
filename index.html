@@ -12,7 +12,7 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Configuración Dinámica de Tailwind (Para los Temas) -->
+    <!-- Configuración Dinámica de Tailwind -->
     <script>
         tailwind.config = {
             theme: {
@@ -31,14 +31,27 @@
         }
     </script>
 
-    <!-- Variables CSS Iniciales (Tema Esmeralda por defecto) -->
+    <!-- Variables CSS para Temas y Geometría -->
     <style>
         :root {
+            /* Por defecto: Esmeralda */
             --p300: 110 231 183;
             --p400: 52 211 153;
             --p500: 16 185 129;
             --p600: 5 150 105;
             --p950: 2 44 34;
+        }
+
+        /* GEOMETRÍA: Industrial (Rudo y Cuadrado) */
+        .geom-industrial * {
+            border-radius: 0px !important;
+        }
+
+        /* GEOMETRÍA: Cápsula (Ovalados Extremos en Interfaz) */
+        .geom-capsule button,
+        .geom-capsule input,
+        .geom-capsule select {
+            border-radius: 9999px !important;
         }
     </style>
 
@@ -47,7 +60,7 @@
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen pb-16 font-sans select-none">
+<body class="bg-slate-900 text-slate-100 min-h-screen pb-16 font-sans select-none transition-colors duration-300">
 
     <!-- Header / Barra Superior -->
     <header class="bg-slate-800/90 backdrop-blur-md border-b border-slate-700/60 sticky top-0 z-40 px-4 py-3 shadow-lg flex justify-between items-center">
@@ -59,7 +72,6 @@
                 <h1 class="text-base font-bold leading-tight">Mis Horas</h1>
                 <div class="flex items-center gap-2 mt-0.5">
                     <span class="text-[11px] text-slate-400">Ciclo Quincenal</span>
-                    <!-- WIDGET TIPO DE CAMBIO -->
                     <span id="exchangeRateBadge" class="text-[9px] bg-slate-700/50 text-slate-300 px-1.5 py-0.5 rounded flex items-center gap-1 border border-slate-600/50">
                         <i class="fa-solid fa-rotate animate-spin text-primary-400" id="exchangeIcon"></i> Cargando...
                     </span>
@@ -68,7 +80,6 @@
         </div>
         
         <div class="flex items-center gap-2">
-            <!-- Widget de Billetera (Independiente) -->
             <button onclick="openWalletModal()" class="bg-slate-900/80 hover:bg-slate-700 border border-slate-600/50 px-3 py-1.5 rounded-xl text-right transition group">
                 <span class="block text-[9px] text-slate-400 uppercase font-medium leading-none mb-0.5 group-hover:text-slate-300">Mi Billetera <i class="fa-solid fa-pen text-[8px] ml-1"></i></span>
                 <span id="walletHeaderAmount" class="block text-sm font-bold text-primary-400 leading-none">$0.00</span>
@@ -104,7 +115,6 @@
                 Cargando fechas...
             </div>
 
-            <!-- Desglose Financiero (Solo Horas) -->
             <div class="space-y-2 mb-4">
                 <div class="bg-slate-900/80 rounded-xl p-3 border border-slate-700/50 flex justify-between items-center">
                     <div>
@@ -167,7 +177,6 @@
                 <label class="block text-[11px] text-slate-400 mb-1">Ubicación / Sitio (Opcional)</label>
                 <div class="relative">
                     <input type="text" id="liveLocation" placeholder="Ej. Taller, Obra A..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 pr-10 text-slate-100 focus:outline-none focus:border-primary-500 text-xs">
-                    <!-- BOTÓN GPS -->
                     <button type="button" onclick="getLocation('liveLocation')" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-primary-400 bg-slate-800 rounded-lg border border-slate-700 transition" title="Usar GPS actual">
                         <i class="fa-solid fa-location-crosshairs text-sm"></i>
                     </button>
@@ -197,14 +206,13 @@
                 </button>
             </div>
 
-            <!-- Resumen de Movimientos del Período -->
             <div class="grid grid-cols-2 gap-2 text-center relative z-10">
                 <div class="bg-slate-900/50 p-2 rounded-xl border border-slate-700/30">
-                    <span class="text-[10px] text-slate-400 block uppercase">Ingresó a Cartera (Quincena)</span>
+                    <span class="text-[10px] text-slate-400 block uppercase">Ingresó a Cartera</span>
                     <span id="accIncome" class="text-sm font-bold text-primary-400">+$0.00</span>
                 </div>
                 <div class="bg-slate-900/50 p-2 rounded-xl border border-slate-700/30">
-                    <span class="text-[10px] text-slate-400 block uppercase">Gastado de Cartera (Quincena)</span>
+                    <span class="text-[10px] text-slate-400 block uppercase">Gastado de Cartera</span>
                     <span id="accExpense" class="text-sm font-bold text-rose-400">-$0.00</span>
                 </div>
             </div>
@@ -214,7 +222,7 @@
             </div>
         </section>
 
-        <!-- Lista de Turnos Rediseñada (Estilo Lista de iOS) -->
+        <!-- Historial de Turnos -->
         <section class="space-y-3">
             <div class="flex justify-between items-center">
                 <h3 class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Historial de Turnos</h3>
@@ -229,7 +237,7 @@
             </div>
             
             <div id="shiftsList" class="bg-slate-900/60 rounded-2xl border border-slate-700/50 px-4">
-                <!-- Se llena dinámicamente con estilo de lista agrupada -->
+                <!-- Se llena dinámicamente -->
             </div>
         </section>
 
@@ -245,6 +253,9 @@
 
     </main>
 
+    <!-- Modales de Funciones -->
+    <!-- (Mismos modales para Billetera y Turno Manual. Simplificados visualmente para caber) -->
+
     <!-- Modal Editar Billetera -->
     <div id="walletModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
         <div class="bg-slate-800 w-full max-w-sm rounded-t-3xl sm:rounded-2xl border border-slate-700 p-6 space-y-4 shadow-2xl">
@@ -255,8 +266,6 @@
                 <button onclick="closeWalletModal()" class="text-slate-400 hover:text-slate-200 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             
-            <p class="text-xs text-slate-400 text-center">Este dinero es independiente de tus horas trabajadas. Actualiza cuánto efectivo traes en este momento.</p>
-            
             <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700 flex flex-col items-center">
                 <label class="text-[11px] text-slate-400 uppercase font-bold tracking-wider mb-2">Efectivo Actual</label>
                 <div class="flex items-center text-4xl font-black text-primary-400">
@@ -264,9 +273,8 @@
                     <input type="number" id="walletInputAmount" step="0.01" class="bg-transparent w-32 text-center focus:outline-none border-b-2 border-slate-700 focus:border-primary-500 pb-1" value="0.00">
                 </div>
             </div>
-
             <button onclick="saveWalletAmount()" class="w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-3.5 rounded-xl transition shadow-md text-sm mt-2">
-                Fijar Monto en Billetera
+                Fijar Monto
             </button>
         </div>
     </div>
@@ -275,7 +283,7 @@
     <div id="transactionModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
         <div class="bg-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-2xl border border-slate-700 p-6 space-y-4 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-                <h3 id="transModalTitle" class="text-base font-bold text-slate-100">Movimiento de Billetera</h3>
+                <h3 id="transModalTitle" class="text-base font-bold text-slate-100">Movimiento</h3>
                 <button onclick="closeTransactionModal()" class="text-slate-400 hover:text-slate-200 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             
@@ -297,27 +305,22 @@
                         </select>
                     </div>
                 </div>
-
                 <div>
                     <label class="block text-xs font-medium text-slate-300 mb-1">Monto ($)</label>
                     <input type="number" id="transAmount" required step="0.01" min="0.01" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-primary-500 text-sm" placeholder="0.00">
                 </div>
-
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Concepto / Descripción</label>
-                    <input type="text" id="transConcept" required placeholder="Ej. Gasolina, Comida, Me pagaron..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-primary-500 text-sm">
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Concepto</label>
+                    <input type="text" id="transConcept" required placeholder="Ej. Gasolina, Herramientas..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-primary-500 text-sm">
                 </div>
-
-                <p class="text-[10px] text-slate-400 text-center italic mt-2"><i class="fa-solid fa-circle-info"></i> Este movimiento sumará o restará automáticamente de tu Billetera principal.</p>
-
                 <button type="submit" class="w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-3.5 rounded-xl transition shadow-md text-sm">
-                    Guardar Movimiento
+                    Guardar
                 </button>
             </form>
         </div>
     </div>
 
-    <!-- Modal Entrada Manual / Editar Turno -->
+    <!-- Modal Registrar Turno -->
     <div id="shiftModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
         <div class="bg-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-2xl border border-slate-700 p-6 space-y-4 shadow-2xl overflow-y-auto max-h-[90vh]">
             <div class="flex justify-between items-center border-b border-slate-700 pb-3">
@@ -327,17 +330,14 @@
             
             <form id="shiftForm" onsubmit="saveShift(event)" class="space-y-4">
                 <input type="hidden" id="shiftId">
-                
                 <div>
                     <label class="block text-xs font-medium text-slate-300 mb-1">Fecha</label>
                     <input type="date" id="shiftDate" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-primary-500 text-sm">
                 </div>
-
                 <div class="flex items-center gap-2 bg-slate-900/50 p-2.5 rounded-xl border border-slate-700/50">
                     <input type="checkbox" id="isDayOff" onchange="toggleDayOffUI()" class="w-4 h-4 rounded text-primary-500 bg-slate-900 border-slate-700 focus:ring-primary-500">
                     <label for="isDayOff" class="text-sm font-medium text-slate-200">Marcar como Día Libre ⛱️</label>
                 </div>
-
                 <div id="timeInputsGroup" class="space-y-4">
                     <div class="grid grid-cols-2 gap-3">
                         <div>
@@ -347,41 +347,36 @@
                         <div>
                             <label class="block text-xs font-medium text-slate-300 mb-1">Hora Salida</label>
                             <input type="time" id="endTime" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-primary-500 text-sm">
-                            <p class="text-[10px] text-slate-500 mt-1 leading-tight">En blanco = Reloj en Vivo</p>
                         </div>
                     </div>
-
                     <div class="bg-slate-900/30 p-3 rounded-xl border border-slate-700/50">
-                        <label class="block text-xs font-medium text-slate-300 mb-2">Horario de Descanso (Opcional)</label>
+                        <label class="block text-xs font-medium text-slate-300 mb-2">Horario de Descanso</label>
                         <div class="grid grid-cols-2 gap-3 mb-2">
                             <div>
-                                <label class="block text-[10px] text-slate-400 mb-1">Inicio Descanso</label>
                                 <input type="time" id="breakStartTime" onchange="calculateBreakMinutes()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-100 focus:outline-none focus:border-primary-500 text-sm">
                             </div>
                             <div>
-                                <label class="block text-[10px] text-slate-400 mb-1">Fin Descanso</label>
                                 <input type="time" id="breakEndTime" onchange="calculateBreakMinutes()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-100 focus:outline-none focus:border-primary-500 text-sm">
                             </div>
                         </div>
                         <div class="flex items-center gap-2 mt-2 pt-2 border-t border-slate-700/50">
-                            <label class="text-xs text-slate-300">Minutos a descontar:</label>
+                            <label class="text-xs text-slate-300">Total Descontado (Mins):</label>
                             <input type="number" id="breakMinutes" value="30" min="0" class="w-16 bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-center text-slate-100 focus:outline-none focus:border-primary-500 text-sm">
                         </div>
                     </div>
                 </div>
-
                 <div>
                     <label class="block text-xs font-medium text-slate-300 mb-1">Ubicación / Sitio</label>
                     <div class="relative">
                         <input type="text" id="shiftLocation" placeholder="Ej. Taller, Obra A..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 pr-10 text-slate-100 focus:outline-none focus:border-primary-500 text-sm">
-                        <button type="button" onclick="getLocation('shiftLocation')" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-primary-400 bg-slate-800 rounded-lg border border-slate-700 transition" title="Usar GPS actual">
+                        <button type="button" onclick="getLocation('shiftLocation')" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-primary-400 bg-slate-800 rounded-lg border border-slate-700 transition">
                             <i class="fa-solid fa-location-crosshairs text-sm"></i>
                         </button>
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Notas (Opcional)</label>
-                    <input type="text" id="shiftNotes" placeholder="Detalles adicionales..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-primary-500 text-sm">
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Notas</label>
+                    <input type="text" id="shiftNotes" placeholder="Opcional..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-primary-500 text-sm">
                 </div>
                 <button type="submit" class="w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-3.5 rounded-xl transition shadow-md text-sm mt-2">
                     Guardar Turno
@@ -390,47 +385,70 @@
         </div>
     </div>
 
-    <!-- Modal Configuración y Temas -->
+    <!-- Modal Configuración, Temas y Respaldos -->
     <div id="settingsModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
-        <div class="bg-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-2xl border border-slate-700 p-6 space-y-4 shadow-2xl">
+        <div class="bg-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-2xl border border-slate-700 p-6 space-y-4 shadow-2xl overflow-y-auto max-h-[90vh]">
             <div class="flex justify-between items-center border-b border-slate-700 pb-3">
                 <h3 class="text-base font-bold text-slate-100">Configuración</h3>
                 <button onclick="closeSettings()" class="text-slate-400 hover:text-slate-200 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             
             <div class="space-y-4">
-                <!-- Temas Visuales -->
+                
+                <!-- Tarifa -->
                 <div>
-                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">Tema Visual</span>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Tarifa por Hora ($)</label>
+                    <input type="number" id="hourlyRate" step="0.01" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-primary-500 text-sm">
+                </div>
+
+                <!-- TEMA DE COLOR -->
+                <div class="pt-2 border-t border-slate-700">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">Color del Tema</span>
                     <div class="grid grid-cols-5 gap-2">
                         <button onclick="applyTheme('emerald')" class="w-full h-8 rounded-lg bg-[#10b981] border-2 border-transparent focus:border-white transition shadow-md" title="Esmeralda"></button>
                         <button onclick="applyTheme('dewalt')" class="w-full h-8 rounded-lg bg-[#eab308] border-2 border-transparent focus:border-white transition shadow-md" title="Amarillo DeWalt"></button>
                         <button onclick="applyTheme('craftsman')" class="w-full h-8 rounded-lg bg-[#ef4444] border-2 border-transparent focus:border-white transition shadow-md" title="Rojo Craftsman"></button>
                         <button onclick="applyTheme('flex')" class="w-full h-8 rounded-lg bg-[#84cc16] border-2 border-transparent focus:border-white transition shadow-md" title="Verde Neón FLEX"></button>
-                        <button onclick="applyTheme('trex')" class="w-full h-8 rounded-lg bg-[#f97316] border-2 border-transparent focus:border-white transition shadow-md" title="Madera Trex"></button>
+                        <button onclick="applyTheme('trex')" class="w-full h-8 rounded-lg bg-[#f97316] border-2 border-transparent focus:border-white transition shadow-md" title="Naranja Trex"></button>
                     </div>
                 </div>
 
+                <!-- TIPOGRAFÍA -->
                 <div class="pt-2 border-t border-slate-700">
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Tarifa por Hora ($)</label>
-                    <input type="number" id="hourlyRate" step="0.01" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-primary-500 text-sm">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">Tipografía (Letra)</span>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button type="button" onclick="applyFont('sans')" id="font-sans" class="py-2 border border-slate-600 rounded-lg text-xs font-semibold text-slate-300 font-sans transition">Estándar</button>
+                        <button type="button" onclick="applyFont('mono')" id="font-mono" class="py-2 border border-slate-600 rounded-lg text-xs font-semibold text-slate-300 font-mono transition">Técnica</button>
+                        <button type="button" onclick="applyFont('serif')" id="font-serif" class="py-2 border border-slate-600 rounded-lg text-xs font-semibold text-slate-300 font-serif transition">Clásica</button>
+                    </div>
                 </div>
 
+                <!-- GEOMETRÍA -->
+                <div class="pt-2 border-t border-slate-700">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">Geometría (Formas)</span>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button type="button" onclick="applyGeometry('modern')" id="geom-modern" class="py-2 border border-slate-600 rounded-xl text-xs font-semibold text-slate-300 transition">Moderno</button>
+                        <button type="button" onclick="applyGeometry('capsule')" id="geom-capsule" class="py-2 border border-slate-600 rounded-full text-xs font-semibold text-slate-300 transition">Cápsula</button>
+                        <button type="button" onclick="applyGeometry('industrial')" id="geom-industrial" class="py-2 border border-slate-600 rounded-none text-xs font-semibold text-slate-300 transition">Industrial</button>
+                    </div>
+                </div>
+
+                <!-- BACKUP -->
                 <div class="pt-2 border-t border-slate-700 space-y-2">
-                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Copia de Seguridad (Backup)</span>
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Respaldos</span>
                     <div class="grid grid-cols-2 gap-2">
                         <button onclick="exportBackup()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold py-2.5 px-3 rounded-xl text-xs transition flex items-center justify-center gap-1.5">
-                            <i class="fa-solid fa-download"></i> Guardar Todo
+                            <i class="fa-solid fa-download"></i> Guardar
                         </button>
                         <label class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold py-2.5 px-3 rounded-xl text-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
-                            <i class="fa-solid fa-upload"></i> Cargar Backup
+                            <i class="fa-solid fa-upload"></i> Cargar
                             <input type="file" id="importFile" accept=".json" onchange="importBackup(event)" class="hidden">
                         </label>
                     </div>
                 </div>
 
                 <button onclick="saveSettings()" class="w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-3.5 rounded-xl transition shadow-md text-sm mt-2">
-                    Guardar Cambios
+                    Cerrar y Guardar
                 </button>
             </div>
         </div>
@@ -438,7 +456,12 @@
 
     <!-- Lógica JavaScript -->
     <script>
-        let settings = JSON.parse(localStorage.getItem('simple_work_settings')) || { rate: 20.00, theme: 'emerald' };
+        let settings = JSON.parse(localStorage.getItem('simple_work_settings')) || {};
+        settings.rate = settings.rate || 20.00;
+        settings.theme = settings.theme || 'emerald';
+        settings.font = settings.font || 'sans';
+        settings.geometry = settings.geometry || 'modern';
+
         let shifts = JSON.parse(localStorage.getItem('simple_work_shifts')) || [];
         let transactions = JSON.parse(localStorage.getItem('simple_work_transactions')) || []; 
         let walletAmount = parseFloat(localStorage.getItem('simple_work_wallet')) || 0.00;
@@ -448,16 +471,11 @@
         let chartInstance = null;
 
         let livePunch = JSON.parse(localStorage.getItem('simple_live_punch')) || {
-            active: false,
-            startTime: null,
-            onBreak: false,
-            breakStart: null,
-            totalBreakMs: 0,
-            location: ''
+            active: false, startTime: null, onBreak: false, breakStart: null, totalBreakMs: 0, location: ''
         };
         let timerInterval = null;
 
-        // ---- MANEJO DE TEMAS VISUALES ----
+        // ---- MANEJO DE TEMAS, FUENTES Y GEOMETRÍA ----
         const themes = {
             emerald: { p300: '110 231 183', p400: '52 211 153', p500: '16 185 129', p600: '5 150 105', p950: '2 44 34' },
             dewalt: { p300: '253 224 71', p400: '250 204 21', p500: '234 179 8', p600: '202 138 4', p950: '66 32 6' },
@@ -476,7 +494,48 @@
             root.style.setProperty('--p950', t.p950);
             settings.theme = name;
             localStorage.setItem('simple_work_settings', JSON.stringify(settings));
-            if (chartInstance) renderApp();
+            if (chartInstance) renderApp(); // Recargar gráfica con nuevo color
+        }
+
+        function applyFont(font) {
+            document.body.classList.remove('font-sans', 'font-mono', 'font-serif');
+            document.body.classList.add(`font-${font}`);
+            settings.font = font;
+            localStorage.setItem('simple_work_settings', JSON.stringify(settings));
+            updateSettingsUI();
+        }
+
+        function applyGeometry(geom) {
+            document.body.classList.remove('geom-modern', 'geom-capsule', 'geom-industrial');
+            document.body.classList.add(`geom-${geom}`);
+            settings.geometry = geom;
+            localStorage.setItem('simple_work_settings', JSON.stringify(settings));
+            updateSettingsUI();
+        }
+
+        function updateSettingsUI() {
+            // Actualizar botones de Tipografía
+            ['sans', 'mono', 'serif'].forEach(f => {
+                const el = document.getElementById('font-' + f);
+                if(settings.font === f) {
+                    el.classList.add('border-primary-500', 'text-primary-400', 'bg-primary-500/10');
+                    el.classList.remove('border-slate-600', 'text-slate-300');
+                } else {
+                    el.classList.remove('border-primary-500', 'text-primary-400', 'bg-primary-500/10');
+                    el.classList.add('border-slate-600', 'text-slate-300');
+                }
+            });
+            // Actualizar botones de Geometría
+            ['modern', 'capsule', 'industrial'].forEach(g => {
+                const el = document.getElementById('geom-' + g);
+                if(settings.geometry === g) {
+                    el.classList.add('border-primary-500', 'text-primary-400', 'bg-primary-500/10');
+                    el.classList.remove('border-slate-600', 'text-slate-300');
+                } else {
+                    el.classList.remove('border-primary-500', 'text-primary-400', 'bg-primary-500/10');
+                    el.classList.add('border-slate-600', 'text-slate-300');
+                }
+            });
         }
 
         // ---- TIPO DE CAMBIO (USD A MXN) ----
@@ -487,12 +546,9 @@
             const lastFetch = localStorage.getItem('simple_work_exchange_last_fetch');
             const now = Date.now();
 
-            if (cachedRate) {
-                badge.innerHTML = `<i class="fa-solid fa-dollar-sign text-primary-400"></i> 1 = $${parseFloat(cachedRate).toFixed(2)} MXN`;
-            }
+            if (cachedRate) badge.innerHTML = `<i class="fa-solid fa-dollar-sign text-primary-400"></i> 1 = $${parseFloat(cachedRate).toFixed(2)} MXN`;
 
-            // Solo actualizar si pasó más de 1 hora para no saturar internet
-            if (!lastFetch || (now - parseInt(lastFetch) > 3600000)) {
+            if (!lastFetch || (now - parseInt(lastFetch) > 3600000)) { // 1 Hora de cache
                 try {
                     const res = await fetch('https://open.er-api.com/v6/latest/USD');
                     const data = await res.json();
@@ -532,7 +588,7 @@
                     }
                     inputEl.placeholder = originalPlaceholder;
                 }, (error) => {
-                    alert("Error al obtener GPS. Asegúrate de dar permisos de ubicación al navegador.");
+                    alert("Error al obtener GPS. Asegúrate de dar permisos de ubicación.");
                     inputEl.placeholder = originalPlaceholder;
                 });
             } else {
@@ -540,7 +596,6 @@
                 inputEl.placeholder = originalPlaceholder;
             }
         }
-        // ------------------------------
 
         window.toggleDayDetails = function(dateStr) {
             const details = document.getElementById('details-' + dateStr);
@@ -573,7 +628,9 @@
         }
 
         function initApp() {
-            applyTheme(settings.theme || 'emerald');
+            applyTheme(settings.theme);
+            applyFont(settings.font);
+            applyGeometry(settings.geometry);
             fetchExchangeRate();
 
             const today = new Date();
@@ -666,11 +723,7 @@
             document.getElementById('walletInputAmount').value = walletAmount.toFixed(2);
             document.getElementById('walletModal').classList.remove('hidden');
         }
-
-        function closeWalletModal() {
-            document.getElementById('walletModal').classList.add('hidden');
-        }
-
+        function closeWalletModal() { document.getElementById('walletModal').classList.add('hidden'); }
         function saveWalletAmount() {
             walletAmount = parseFloat(document.getElementById('walletInputAmount').value) || 0;
             localStorage.setItem('simple_work_wallet', walletAmount);
@@ -682,13 +735,11 @@
         function renderTransactionsList(cycleTrans, tIncome, tExpense) {
             document.getElementById('accIncome').innerText = `+$${tIncome.toFixed(2)}`;
             document.getElementById('accExpense').innerText = `-$${tExpense.toFixed(2)}`;
-
             const listEl = document.getElementById('transactionsList');
             if (cycleTrans.length === 0) {
                 listEl.innerHTML = `<div class="text-center py-4 bg-slate-900/40 rounded-xl border border-slate-800 text-slate-500 text-[11px]">Sin movimientos de billetera esta quincena.</div>`;
                 return;
             }
-
             listEl.innerHTML = cycleTrans.map(t => {
                 const dateObj = new Date(t.date + 'T00:00:00');
                 const dateFormatted = dateObj.toLocaleDateString('es-ES', { weekday: 'short', month: 'short', day: 'numeric' });
@@ -776,7 +827,6 @@
         }
 
         function editTransaction(id) { openTransactionModal(id); }
-        
         function deleteTransaction(id) {
             if (confirm('¿Eliminar este movimiento? (Se revertirá de tu billetera)')) {
                 const t = transactions.find(item => item.id === id);
@@ -791,26 +841,22 @@
             }
         }
 
-        // ---- RENDER LISTA ESTILO iOS ACCORDION ----
         function renderShiftsList(cycleShifts) {
             const listEl = document.getElementById('shiftsList');
             if (cycleShifts.length === 0) {
                 listEl.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs">No hay turnos en esta quincena.</div>`;
                 return;
             }
-
             const grouped = {};
             cycleShifts.forEach(s => {
                 if (!grouped[s.date]) grouped[s.date] = [];
                 grouped[s.date].push(s);
             });
-
             const sortedDates = Object.keys(grouped).sort((a,b) => new Date(b) - new Date(a));
             const todayStr = new Date().toISOString().split('T')[0];
 
             listEl.innerHTML = sortedDates.map(dateStr => {
                 const dayShifts = grouped[dateStr];
-                
                 const dateObj = new Date(dateStr + 'T00:00:00');
                 const dayName = dateObj.toLocaleDateString('es-ES', { weekday: 'long' });
                 const monthName = dateObj.toLocaleDateString('es-ES', { month: 'short' });
@@ -832,7 +878,6 @@
                             </div>
                         </div>`;
                     }
-
                     const [hS, mS] = s.startTime.split(':').map(Number);
                     const [hE, mE] = s.endTime.split(':').map(Number);
                     let mins = ((hE * 60 + mE) - (hS * 60 + mS)) - (parseInt(s.breakMinutes) || 0);
@@ -843,9 +888,7 @@
                     let pay = hrs * settings.rate;
 
                     let breakText = s.breakMinutes > 0 ? `Descanso: ${s.breakMinutes}m` : 'Sin descanso';
-                    if (s.breakStartTime && s.breakEndTime) {
-                        breakText = `${s.breakStartTime} - ${s.breakEndTime} (${s.breakMinutes}m)`;
-                    }
+                    if (s.breakStartTime && s.breakEndTime) breakText = `${s.breakStartTime} - ${s.breakEndTime} (${s.breakMinutes}m)`;
 
                     return `
                         <div class="bg-slate-800/90 border border-slate-700/70 p-3 rounded-xl flex justify-between items-center mt-2 shadow-sm">
@@ -870,7 +913,6 @@
                 const displayHrs = Math.floor(totalDayMins / 60);
                 const displayMins = totalDayMins % 60;
                 const timeFormatted = isDayOff ? "0:00" : `${displayHrs}:${displayMins.toString().padStart(2, '0')}`;
-
                 const titleColor = (dateStr === todayStr) ? 'text-amber-500' : 'text-slate-100';
 
                 return `
@@ -896,7 +938,6 @@
             const ctx = document.getElementById('cycleChart').getContext('2d');
             const labels = [];
             const data = [];
-
             for (let i = 0; i < 14; i++) {
                 const d = new Date(startDate);
                 d.setDate(d.getDate() + i);
@@ -915,7 +956,6 @@
                 }
             }
 
-            // Obtenemos el color actual del tema para la gráfica
             const rootStyle = getComputedStyle(document.documentElement);
             const p500_rgb = rootStyle.getPropertyValue('--p500').trim().split(' ').join(',');
             const chartColor = `rgba(${p500_rgb}, 1)`;
@@ -965,7 +1005,6 @@
                         notes: 'Registrado con Reloj en Vivo',
                         isDayOff: false
                     });
-
                     localStorage.setItem('simple_work_shifts', JSON.stringify(shifts));
                     livePunch = { active: false, startTime: null, onBreak: false, breakStart: null, totalBreakMs: 0, location: '' };
                     clearInterval(timerInterval);
@@ -1063,10 +1102,8 @@
                     const bHrs = Math.floor(bTotalSecs / 3600);
                     const bMins = Math.floor((bTotalSecs % 3600) / 60);
                     const bSecs = bTotalSecs % 60;
-                    
                     let bText = `${pad(bMins)}:${pad(bSecs)}`;
                     if (bHrs > 0) bText = `${pad(bHrs)}:${bText}`;
-                    
                     breakTimerEl.innerText = `Descanso: ${bText}`;
                     if (livePunch.onBreak) {
                         breakTimerEl.className = "text-[10px] text-amber-400 font-medium bg-amber-400/10 px-2 py-0.5 rounded-full border border-amber-400/20 inline-block mt-1";
@@ -1089,7 +1126,6 @@
             const secs = totalSecs % 60;
 
             document.getElementById('timerDisplay').innerText = `${pad(hrs)}:${pad(mins)}:${pad(secs)}`;
-
             const earnedPay = (elapsedMs / (1000 * 60 * 60)) * settings.rate;
             document.getElementById('timerPayDisplay').innerText = `$${earnedPay.toFixed(2)}`;
         }
@@ -1120,10 +1156,8 @@
                 if (s) {
                     document.getElementById('shiftId').value = s.id;
                     document.getElementById('shiftDate').value = s.date;
-                    
                     document.getElementById('isDayOff').checked = !!s.isDayOff;
                     toggleDayOffUI();
-
                     document.getElementById('startTime').value = s.startTime || '08:00';
                     document.getElementById('endTime').value = s.endTime || '';
                     document.getElementById('breakStartTime').value = s.breakStartTime || '';
@@ -1158,53 +1192,29 @@
             const isDayOff = document.getElementById('isDayOff').checked;
 
             if (isDayOff) {
-                startTime = "00:00";
-                endTime = "00:00";
-                breakMinutes = 0;
-                breakStartTime = "";
-                breakEndTime = "";
+                startTime = "00:00"; endTime = "00:00"; breakMinutes = 0; breakStartTime = ""; breakEndTime = "";
                 if (!notes) notes = "Día Libre";
             } else if (!endTime) {
-                if (livePunch.active) {
-                    alert('Ya hay un reloj en vivo activo. Finalízalo primero.');
-                    return;
-                }
+                if (livePunch.active) { alert('Ya hay un reloj en vivo activo. Finalízalo primero.'); return; }
                 const [h, m] = startTime.split(':').map(Number);
                 const [y, mo, d] = date.split('-').map(Number);
                 const startDate = new Date(y, mo - 1, d, h, m, 0, 0);
-                
-                if (startDate.getTime() > Date.now()) {
-                    alert('La hora de inicio no puede estar en el futuro.');
-                    return;
-                }
-
-                livePunch.active = true;
-                livePunch.startTime = startDate.getTime();
-                livePunch.onBreak = false;
-                livePunch.totalBreakMs = (parseInt(breakMinutes) || 0) * 60000;
-                livePunch.location = location;
-                
+                if (startDate.getTime() > Date.now()) { alert('La hora de inicio no puede estar en el futuro.'); return; }
+                livePunch.active = true; livePunch.startTime = startDate.getTime(); livePunch.onBreak = false;
+                livePunch.totalBreakMs = (parseInt(breakMinutes) || 0) * 60000; livePunch.location = location;
                 localStorage.setItem('simple_live_punch', JSON.stringify(livePunch));
                 document.getElementById('liveLocation').value = location;
-                startTimerInterval();
-                updateTimerUI();
-                closeShiftModal();
+                startTimerInterval(); updateTimerUI(); closeShiftModal();
                 return;
             }
-
             const shiftObj = { id, date, startTime, endTime, breakMinutes, breakStartTime, breakEndTime, location, notes, isDayOff };
             const idx = shifts.findIndex(s => s.id === id);
-            
-            if (idx >= 0) shifts[idx] = shiftObj;
-            else shifts.push(shiftObj);
-
+            if (idx >= 0) shifts[idx] = shiftObj; else shifts.push(shiftObj);
             localStorage.setItem('simple_work_shifts', JSON.stringify(shifts));
-            closeShiftModal();
-            renderApp();
+            closeShiftModal(); renderApp();
         }
 
         function editShift(id) { openShiftModal(id); }
-
         function deleteShift(id) {
             if (confirm('¿Eliminar este turno?')) {
                 shifts = shifts.filter(s => s.id !== id);
@@ -1215,6 +1225,7 @@
 
         function openSettings() {
             document.getElementById('hourlyRate').value = settings.rate;
+            updateSettingsUI();
             document.getElementById('settingsModal').classList.remove('hidden');
         }
 
@@ -1256,6 +1267,8 @@
                         alert('¡Copia de seguridad restaurada con éxito!');
                         closeSettings();
                         applyTheme(settings.theme || 'emerald');
+                        applyFont(settings.font || 'sans');
+                        applyGeometry(settings.geometry || 'modern');
                         renderApp();
                     } else {
                         alert('El archivo no tiene el formato correcto.');
@@ -1269,11 +1282,9 @@
 
         function exportCSV() {
             if (shifts.length === 0 && transactions.length === 0) return alert('No hay datos para exportar');
-            
             let csv = '---- REPORTE QUINCENAL ----\n\n';
             csv += 'TURNOS TRABAJADOS\n';
             csv += 'Fecha,Dia Libre,Ubicacion,Hora Entrada,Hora Salida,Inicio Descanso,Fin Descanso,Descanso(Mins),Horas,Pago Bruto,Comision Cheque,Pago Neto\n';
-            
             shifts.forEach(s => {
                 let hrs = 0, gross = 0, feeAmount = 0, net = 0;
                 if (!s.isDayOff) {
@@ -1289,13 +1300,11 @@
                 }
                 csv += `"${s.date}","${s.isDayOff ? 'Si' : 'No'}","${s.location || ''}","${s.startTime}","${s.endTime}","${s.breakStartTime || ''}","${s.breakEndTime || ''}",${s.breakMinutes},${hrs.toFixed(2)},${gross.toFixed(2)},${feeAmount.toFixed(2)},${net.toFixed(2)}\n`;
             });
-
             csv += '\nMOVIMIENTOS DE BILLETERA\n';
             csv += 'Fecha,Tipo,Monto,Concepto\n';
             transactions.forEach(t => {
                 csv += `"${t.date}","${t.type === 'income' ? 'Ingreso' : 'Gasto'}","${t.amount}","${t.concept}"\n`;
             });
-
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
