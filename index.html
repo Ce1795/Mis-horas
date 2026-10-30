@@ -141,27 +141,6 @@
             </div>
         </section>
 
-        <!-- Presets -->
-        <section class="space-y-2">
-            <div class="flex justify-between items-center">
-                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Atajos Rápidos</span>
-                <button onclick="openShiftModal()" class="text-xs font-semibold text-emerald-400 hover:underline flex items-center gap-1">
-                    <i class="fa-solid fa-plus"></i> Entrada Manual
-                </button>
-            </div>
-            <div class="grid grid-cols-3 gap-2">
-                <button onclick="addPresetShift(8)" class="bg-slate-800 hover:bg-slate-700 border border-slate-700/80 rounded-xl py-2.5 text-xs font-bold text-slate-200 transition">
-                    +8 Horas
-                </button>
-                <button onclick="addPresetShift(10)" class="bg-slate-800 hover:bg-slate-700 border border-slate-700/80 rounded-xl py-2.5 text-xs font-bold text-slate-200 transition">
-                    +10 Horas
-                </button>
-                <button onclick="addPresetShift(12)" class="bg-slate-800 hover:bg-slate-700 border border-slate-700/80 rounded-xl py-2.5 text-xs font-bold text-slate-200 transition">
-                    +12 Horas
-                </button>
-            </div>
-        </section>
-
         <!-- CONTROL DE GASTOS Y BILLETERA -->
         <section class="bg-slate-800/80 border border-slate-700/70 rounded-2xl p-4 shadow-lg space-y-4 relative overflow-hidden">
             <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
@@ -192,16 +171,23 @@
             </div>
         </section>
 
-        <!-- Lista de Turnos -->
+        <!-- Lista de Turnos Rediseñada (Estilo Lista de iOS) -->
         <section class="space-y-3">
             <div class="flex justify-between items-center">
                 <h3 class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Historial de Turnos</h3>
-                <button onclick="exportCSV()" class="text-[11px] text-slate-400 hover:text-slate-200 transition flex items-center gap-1">
-                    <i class="fa-solid fa-file-csv"></i> Exportar
-                </button>
+                <div class="flex items-center gap-3">
+                    <!-- Entrada Manual Movida Aquí -->
+                    <button onclick="openShiftModal()" class="text-[11px] font-semibold text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1">
+                        <i class="fa-solid fa-plus"></i> Manual
+                    </button>
+                    <button onclick="exportCSV()" class="text-[11px] text-slate-400 hover:text-slate-200 transition flex items-center gap-1">
+                        <i class="fa-solid fa-file-csv"></i> Exportar
+                    </button>
+                </div>
             </div>
-            <div id="shiftsList" class="space-y-2.5">
-                <!-- Se llena con JS -->
+            
+            <div id="shiftsList" class="bg-slate-900/60 rounded-2xl border border-slate-700/50 px-4">
+                <!-- Se llena dinámicamente con estilo de lista agrupada -->
             </div>
         </section>
 
@@ -397,7 +383,7 @@
         let settings = JSON.parse(localStorage.getItem('simple_work_settings')) || { rate: 20.00 };
         let shifts = JSON.parse(localStorage.getItem('simple_work_shifts')) || [];
         let transactions = JSON.parse(localStorage.getItem('simple_work_transactions')) || []; 
-        let walletAmount = parseFloat(localStorage.getItem('simple_work_wallet')) || 0.00; // NUEVO: Billetera Global
+        let walletAmount = parseFloat(localStorage.getItem('simple_work_wallet')) || 0.00;
 
         const baseCycleStart = new Date('2026-10-30T00:00:00');
         let currentCycleOffset = 0;
@@ -412,6 +398,20 @@
             location: ''
         };
         let timerInterval = null;
+
+        window.toggleDayDetails = function(dateStr) {
+            const details = document.getElementById('details-' + dateStr);
+            const icon = document.getElementById('icon-' + dateStr);
+            if (details.classList.contains('hidden')) {
+                details.classList.remove('hidden');
+                details.classList.add('flex');
+                icon.style.transform = 'rotate(90deg)';
+            } else {
+                details.classList.add('hidden');
+                details.classList.remove('flex');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        };
 
         function getCycleDates(offset) {
             const start = new Date(baseCycleStart);
@@ -469,22 +469,18 @@
             const opts = { month: 'short', day: 'numeric', year: 'numeric' };
             document.getElementById('currentPeriodLabel').innerText = `${start.toLocaleDateString('es-ES', opts)} - ${end.toLocaleDateString('es-ES', opts)}`;
 
-            // Actualizar Billetera Global
             document.getElementById('walletHeaderAmount').innerText = `$${walletAmount.toFixed(2)}`;
 
-            // Filtro de turnos
             const cycleShifts = shifts.filter(s => {
                 const d = new Date(s.date + 'T00:00:00');
                 return d >= start && d <= end;
             }).sort((a,b) => new Date(b.date) - new Date(a.date));
 
-            // Filtro de transacciones de la quincena (solo para vista)
             const cycleTrans = transactions.filter(t => {
                 const d = new Date(t.date + 'T00:00:00');
                 return d >= start && d <= end;
             }).sort((a,b) => new Date(b.date) - new Date(a.date));
 
-            // Cálculos de Horas
             let totalMins = 0;
             let workedShiftsCount = 0;
             cycleShifts.forEach(s => {
@@ -502,21 +498,18 @@
             const grossPay = totalHours * settings.rate;
             const { feeAmount, net, feePercent } = calculateNetPay(grossPay);
 
-            // Cálculos Contables (Para vista de quincena)
             let tIncome = 0, tExpense = 0;
             cycleTrans.forEach(t => {
                 if (t.type === 'income') tIncome += parseFloat(t.amount);
                 else tExpense += parseFloat(t.amount);
             });
 
-            // Update UI Principal
             document.getElementById('totalGrossPay').innerText = `$${grossPay.toFixed(2)}`;
             document.getElementById('feeDisplay').innerText = `-$${feeAmount.toFixed(2)} (${feePercent}%)`;
             document.getElementById('totalNetPay').innerText = `$${net.toFixed(2)}`;
             document.getElementById('totalPeriodHours').innerText = `${totalHours.toFixed(1)} h`;
             document.getElementById('shiftCount').innerText = workedShiftsCount; 
 
-            // Update Secciones
             renderShiftsList(cycleShifts);
             renderTransactionsList(cycleTrans, tIncome, tExpense);
             renderChart(start, cycleShifts);
@@ -539,7 +532,7 @@
             renderApp();
         }
 
-        // ---- MÓDULO CONTABLE: FUNCIONES ----
+        // ---- MÓDULO CONTABLE ----
         function renderTransactionsList(cycleTrans, tIncome, tExpense) {
             document.getElementById('accIncome').innerText = `+$${tIncome.toFixed(2)}`;
             document.getElementById('accExpense').innerText = `-$${tExpense.toFixed(2)}`;
@@ -595,7 +588,7 @@
                     document.getElementById('transOldType').value = t.type;
                 }
             } else {
-                document.getElementById('transModalTitle').innerText = 'Nuevo Movimiento';
+                document.getElementById('transModalTitle').innerText = 'Movimiento de Billetera';
                 document.getElementById('transForm').reset();
                 document.getElementById('transId').value = '';
                 document.getElementById('transOldAmount').value = '0';
@@ -617,13 +610,11 @@
             const oldAmount = parseFloat(document.getElementById('transOldAmount').value) || 0;
             const oldType = document.getElementById('transOldType').value;
 
-            // Revertimos el efecto en la billetera de la cantidad vieja (si existía)
             if (oldAmount > 0) {
                 if (oldType === 'income') walletAmount -= oldAmount;
                 else walletAmount += oldAmount;
             }
 
-            // Aplicamos el nuevo efecto a la billetera
             if (type === 'income') walletAmount += amount;
             else walletAmount -= amount;
 
@@ -633,7 +624,7 @@
             else transactions.push(txObj);
 
             localStorage.setItem('simple_work_transactions', JSON.stringify(transactions));
-            localStorage.setItem('simple_work_wallet', walletAmount); // Guardamos la billetera
+            localStorage.setItem('simple_work_wallet', walletAmount);
             closeTransactionModal();
             renderApp();
         }
@@ -653,69 +644,105 @@
                 renderApp();
             }
         }
-        // ----------------------------------------------
 
+        // ---- RENDER LISTA ESTILO iOS ACCORDION ----
         function renderShiftsList(cycleShifts) {
             const listEl = document.getElementById('shiftsList');
             if (cycleShifts.length === 0) {
-                listEl.innerHTML = `<div class="text-center py-6 bg-slate-800/40 rounded-xl border border-slate-800 text-slate-400 text-xs">No hay turnos en esta quincena.</div>`;
+                listEl.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs">No hay turnos en esta quincena.</div>`;
                 return;
             }
 
-            listEl.innerHTML = cycleShifts.map(s => {
-                const dateObj = new Date(s.date + 'T00:00:00');
-                const dateFormatted = dateObj.toLocaleDateString('es-ES', { weekday: 'short', month: 'short', day: 'numeric' });
+            const grouped = {};
+            cycleShifts.forEach(s => {
+                if (!grouped[s.date]) grouped[s.date] = [];
+                grouped[s.date].push(s);
+            });
 
-                if (s.isDayOff) {
-                    return `
-                    <div class="bg-slate-800/40 border border-slate-700/40 p-3.5 rounded-xl flex justify-between items-center shadow-sm opacity-80">
-                        <div class="space-y-0.5">
-                            <div class="flex items-center gap-2">
-                                <span class="text-xs font-bold text-slate-400 capitalize">${dateFormatted}</span>
-                            </div>
+            const sortedDates = Object.keys(grouped).sort((a,b) => new Date(b) - new Date(a));
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            listEl.innerHTML = sortedDates.map(dateStr => {
+                const dayShifts = grouped[dateStr];
+                
+                const dateObj = new Date(dateStr + 'T00:00:00');
+                const dayName = dateObj.toLocaleDateString('es-ES', { weekday: 'long' });
+                const monthName = dateObj.toLocaleDateString('es-ES', { month: 'short' });
+                const dayNum = dateObj.getDate();
+                const dateFormatted = `${dayName}, ${monthName} ${dayNum}`;
+
+                let totalDayMins = 0;
+                let isDayOff = false;
+
+                let shiftsHtml = dayShifts.map(s => {
+                    if (s.isDayOff) {
+                        isDayOff = true;
+                        return `
+                        <div class="bg-slate-800/80 border border-slate-700/50 p-3 rounded-xl flex justify-between items-center opacity-80 mt-2">
                             <div class="text-sm font-semibold text-slate-300">⛱️ Día Libre</div>
-                            ${s.notes && s.notes !== 'Día Libre' ? `<div class="text-[11px] text-slate-400 italic">${s.notes}</div>` : ''}
-                        </div>
-                        <div class="flex gap-1 border-l border-slate-700 pl-2">
-                            <button onclick="editShift('${s.id}')" class="text-slate-400 hover:text-slate-200 p-1"><i class="fa-solid fa-pen text-xs"></i></button>
-                            <button onclick="deleteShift('${s.id}')" class="text-red-400 hover:text-red-300 p-1"><i class="fa-solid fa-trash text-xs"></i></button>
-                        </div>
-                    </div>`;
-                }
-
-                const [hS, mS] = s.startTime.split(':').map(Number);
-                const [hE, mE] = s.endTime.split(':').map(Number);
-                let mins = ((hE * 60 + mE) - (hS * 60 + mS)) - (parseInt(s.breakMinutes) || 0);
-                if (mins < 0) mins += 24 * 60;
-                let hrs = Math.max(0, mins / 60);
-                let pay = hrs * settings.rate;
-
-                let breakText = `Descanso: ${s.breakMinutes}m`;
-                if (s.breakStartTime && s.breakEndTime) {
-                    breakText = `${s.breakStartTime} - ${s.breakEndTime} (${s.breakMinutes}m)`;
-                }
-
-                return `
-                    <div class="bg-slate-800 border border-slate-700/70 p-3.5 rounded-xl flex justify-between items-center shadow-sm">
-                        <div class="space-y-0.5">
-                            <div class="flex items-center gap-2">
-                                <span class="text-xs font-bold text-emerald-400 capitalize">${dateFormatted}</span>
-                                ${s.location ? `<span class="text-[10px] bg-slate-700/80 px-2 py-0.5 rounded text-slate-300"><i class="fa-solid fa-location-dot text-emerald-400 mr-1"></i>${s.location}</span>` : ''}
-                            </div>
-                            <div class="text-sm font-semibold text-slate-200">${s.startTime} - ${s.endTime} <span class="text-xs font-normal text-slate-400">(${hrs.toFixed(1)}h)</span></div>
-                            ${s.notes ? `<div class="text-[11px] text-slate-400 italic">${s.notes}</div>` : ''}
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <div class="text-right">
-                                <div class="text-sm font-bold text-slate-100">$${pay.toFixed(2)}</div>
-                                <div class="text-[10px] text-slate-400">${breakText}</div>
-                            </div>
                             <div class="flex gap-1 border-l border-slate-700 pl-2">
                                 <button onclick="editShift('${s.id}')" class="text-slate-400 hover:text-slate-200 p-1"><i class="fa-solid fa-pen text-xs"></i></button>
                                 <button onclick="deleteShift('${s.id}')" class="text-red-400 hover:text-red-300 p-1"><i class="fa-solid fa-trash text-xs"></i></button>
                             </div>
+                        </div>`;
+                    }
+
+                    const [hS, mS] = s.startTime.split(':').map(Number);
+                    const [hE, mE] = s.endTime.split(':').map(Number);
+                    let mins = ((hE * 60 + mE) - (hS * 60 + mS)) - (parseInt(s.breakMinutes) || 0);
+                    if (mins < 0) mins += 24 * 60;
+                    totalDayMins += mins;
+                    
+                    let hrs = Math.max(0, mins / 60);
+                    let pay = hrs * settings.rate;
+
+                    let breakText = s.breakMinutes > 0 ? `Descanso: ${s.breakMinutes}m` : 'Sin descanso';
+                    if (s.breakStartTime && s.breakEndTime) {
+                        breakText = `${s.breakStartTime} - ${s.breakEndTime} (${s.breakMinutes}m)`;
+                    }
+
+                    return `
+                        <div class="bg-slate-800/90 border border-slate-700/70 p-3 rounded-xl flex justify-between items-center mt-2 shadow-sm">
+                            <div class="space-y-0.5">
+                                <div class="text-sm font-semibold text-slate-200">${s.startTime} - ${s.endTime} <span class="text-[10px] font-normal text-slate-400">(${hrs.toFixed(2)}h)</span></div>
+                                ${s.location ? `<div class="text-[10px] text-emerald-400"><i class="fa-solid fa-location-dot mr-1"></i>${s.location}</div>` : ''}
+                                ${s.notes ? `<div class="text-[10px] text-slate-400 italic">${s.notes}</div>` : ''}
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="text-right">
+                                    <div class="text-sm font-bold text-slate-100">$${pay.toFixed(2)}</div>
+                                    <div class="text-[9px] text-slate-400">${breakText}</div>
+                                </div>
+                                <div class="flex gap-1 border-l border-slate-700 pl-2">
+                                    <button onclick="editShift('${s.id}')" class="text-slate-400 hover:text-slate-200 p-1"><i class="fa-solid fa-pen text-xs"></i></button>
+                                    <button onclick="deleteShift('${s.id}')" class="text-red-400 hover:text-red-300 p-1"><i class="fa-solid fa-trash text-xs"></i></button>
+                                </div>
+                            </div>
+                        </div>`;
+                }).join('');
+
+                const displayHrs = Math.floor(totalDayMins / 60);
+                const displayMins = totalDayMins % 60;
+                const timeFormatted = isDayOff ? "0:00" : `${displayHrs}:${displayMins.toString().padStart(2, '0')}`;
+
+                const titleColor = (dateStr === todayStr) ? 'text-amber-500' : 'text-slate-100';
+
+                return `
+                <div class="border-b border-slate-700/50 last:border-0">
+                    <div class="py-3.5 flex justify-between items-center cursor-pointer select-none group" onclick="toggleDayDetails('${dateStr}')">
+                        <div>
+                            <div class="text-[15px] font-semibold ${titleColor} capitalize transition-colors">${dateFormatted}</div>
+                            <div class="text-xs text-slate-400 mt-0.5">Horas: ${timeFormatted}</div>
                         </div>
-                    </div>`;
+                        <div class="flex items-center gap-4 text-slate-300">
+                            <i class="fa-solid fa-briefcase text-sm"></i>
+                            <i class="fa-solid fa-chevron-right text-xs text-slate-500 transition-transform duration-200" id="icon-${dateStr}"></i>
+                        </div>
+                    </div>
+                    <div id="details-${dateStr}" class="hidden flex-col pb-3">
+                        ${shiftsHtml}
+                    </div>
+                </div>`;
             }).join('');
         }
 
@@ -932,28 +959,6 @@
                 if (mins < 0) mins += 24 * 60;
                 document.getElementById('breakMinutes').value = mins;
             }
-        }
-
-        function addPresetShift(hours) {
-            const todayStr = new Date().toISOString().split('T')[0];
-            const startTime = "08:00";
-            const [h, m] = startTime.split(':').map(Number);
-            const endHour = (h + hours) % 24;
-            const endTime = `${String(endHour).padStart(2,'0')}:00`;
-
-            shifts.push({
-                id: '_' + Math.random().toString(36).substr(2, 9),
-                date: todayStr,
-                startTime: startTime,
-                endTime: endTime,
-                breakMinutes: 30,
-                location: '',
-                notes: `Turno rápido +${hours}h`,
-                isDayOff: false
-            });
-
-            localStorage.setItem('simple_work_shifts', JSON.stringify(shifts));
-            renderApp();
         }
 
         function openShiftModal(editId = null) {
