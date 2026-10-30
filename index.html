@@ -11,6 +11,37 @@
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Configuración Dinámica de Tailwind (Para los Temas) -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            300: 'rgb(var(--p300) / <alpha-value>)',
+                            400: 'rgb(var(--p400) / <alpha-value>)',
+                            500: 'rgb(var(--p500) / <alpha-value>)',
+                            600: 'rgb(var(--p600) / <alpha-value>)',
+                            950: 'rgb(var(--p950) / <alpha-value>)',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Variables CSS Iniciales (Tema Esmeralda por defecto) -->
+    <style>
+        :root {
+            --p300: 110 231 183;
+            --p400: 52 211 153;
+            --p500: 16 185 129;
+            --p600: 5 150 105;
+            --p950: 2 44 34;
+        }
+    </style>
+
     <!-- FontAwesome Icons CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js CDN -->
@@ -21,12 +52,18 @@
     <!-- Header / Barra Superior -->
     <header class="bg-slate-800/90 backdrop-blur-md border-b border-slate-700/60 sticky top-0 z-40 px-4 py-3 shadow-lg flex justify-between items-center">
         <div class="flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+            <div class="w-9 h-9 rounded-xl bg-primary-500/20 border border-primary-500/40 flex items-center justify-center text-primary-400">
                 <i class="fa-solid fa-clock text-lg"></i>
             </div>
             <div>
                 <h1 class="text-base font-bold leading-tight">Mis Horas</h1>
-                <p class="text-[11px] text-slate-400">Ciclo Quincenal (Vie - Jue)</p>
+                <div class="flex items-center gap-2 mt-0.5">
+                    <span class="text-[11px] text-slate-400">Ciclo Quincenal</span>
+                    <!-- WIDGET TIPO DE CAMBIO -->
+                    <span id="exchangeRateBadge" class="text-[9px] bg-slate-700/50 text-slate-300 px-1.5 py-0.5 rounded flex items-center gap-1 border border-slate-600/50">
+                        <i class="fa-solid fa-rotate animate-spin text-primary-400" id="exchangeIcon"></i> Cargando...
+                    </span>
+                </div>
             </div>
         </div>
         
@@ -34,7 +71,7 @@
             <!-- Widget de Billetera (Independiente) -->
             <button onclick="openWalletModal()" class="bg-slate-900/80 hover:bg-slate-700 border border-slate-600/50 px-3 py-1.5 rounded-xl text-right transition group">
                 <span class="block text-[9px] text-slate-400 uppercase font-medium leading-none mb-0.5 group-hover:text-slate-300">Mi Billetera <i class="fa-solid fa-pen text-[8px] ml-1"></i></span>
-                <span id="walletHeaderAmount" class="block text-sm font-bold text-emerald-400 leading-none">$0.00</span>
+                <span id="walletHeaderAmount" class="block text-sm font-bold text-primary-400 leading-none">$0.00</span>
             </button>
             <button onclick="openSettings()" class="bg-slate-700/60 hover:bg-slate-600 p-2.5 rounded-xl text-slate-200 transition border border-slate-600/50">
                 <i class="fa-solid fa-gear"></i>
@@ -47,7 +84,7 @@
         <!-- Selector de Período y Tarjeta de Ganancias -->
         <section class="bg-slate-800 border border-slate-700/80 rounded-2xl p-5 shadow-xl relative overflow-hidden">
             <div class="flex justify-between items-center mb-3">
-                <div class="flex items-center gap-1.5 text-xs text-emerald-400 font-semibold uppercase tracking-wider">
+                <div class="flex items-center gap-1.5 text-xs text-primary-400 font-semibold uppercase tracking-wider">
                     <i class="fa-solid fa-calendar-week"></i> Período de Pago
                 </div>
                 <div class="flex items-center gap-1 bg-slate-900/60 p-1 rounded-xl border border-slate-700/50">
@@ -80,9 +117,9 @@
                     </div>
                 </div>
 
-                <div class="bg-emerald-950/40 rounded-xl p-4 border border-emerald-500/30 text-center shadow-inner">
-                    <span class="text-xs text-emerald-400 uppercase tracking-wider font-bold">Pago Neto Estimado</span>
-                    <div id="totalNetPay" class="text-4xl font-extrabold text-emerald-400 mt-1">$0.00</div>
+                <div class="bg-primary-950/40 rounded-xl p-4 border border-primary-500/30 text-center shadow-inner transition-colors duration-300">
+                    <span class="text-xs text-primary-400 uppercase tracking-wider font-bold">Pago Neto Estimado</span>
+                    <div id="totalNetPay" class="text-4xl font-extrabold text-primary-400 mt-1">$0.00</div>
                     <span class="text-[10px] text-slate-400 block mt-1">(Solo dinero de las horas)</span>
                 </div>
             </div>
@@ -115,30 +152,30 @@
                 <div class="flex flex-col items-center justify-center">
                     <span class="text-[11px] text-slate-400 flex items-center justify-center gap-1.5 mb-0.5">
                         Tiempo Transcurrido
-                        <button onclick="editLiveStartTime()" id="editLiveBtn" class="hidden text-slate-500 hover:text-emerald-400 transition" title="Editar hora de inicio"><i class="fa-solid fa-pen text-[10px]"></i></button>
+                        <button onclick="editLiveStartTime()" id="editLiveBtn" class="hidden text-slate-500 hover:text-primary-400 transition" title="Editar hora de inicio"><i class="fa-solid fa-pen text-[10px]"></i></button>
                     </span>
                     <span id="timerDisplay" class="text-2xl font-mono font-bold text-slate-100 leading-none">00:00:00</span>
                     <span id="breakTimerDisplay" class="hidden"></span>
                 </div>
                 <div class="flex flex-col items-center justify-center">
                     <span class="text-[11px] text-slate-400 block mb-0.5">Ganancia Bruta</span>
-                    <span id="timerPayDisplay" class="text-2xl font-mono font-bold text-emerald-400 leading-none">$0.00</span>
+                    <span id="timerPayDisplay" class="text-2xl font-mono font-bold text-primary-400 leading-none">$0.00</span>
                 </div>
             </div>
 
             <div>
                 <label class="block text-[11px] text-slate-400 mb-1">Ubicación / Sitio (Opcional)</label>
                 <div class="relative">
-                    <input type="text" id="liveLocation" placeholder="Ej. Taller, Obra A..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 pr-10 text-slate-100 focus:outline-none focus:border-emerald-500 text-xs">
+                    <input type="text" id="liveLocation" placeholder="Ej. Taller, Obra A..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 pr-10 text-slate-100 focus:outline-none focus:border-primary-500 text-xs">
                     <!-- BOTÓN GPS -->
-                    <button type="button" onclick="getLocation('liveLocation')" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-emerald-400 bg-slate-800 rounded-lg border border-slate-700 transition" title="Usar GPS actual">
+                    <button type="button" onclick="getLocation('liveLocation')" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-primary-400 bg-slate-800 rounded-lg border border-slate-700 transition" title="Usar GPS actual">
                         <i class="fa-solid fa-location-crosshairs text-sm"></i>
                     </button>
                 </div>
             </div>
 
             <div class="grid grid-cols-2 gap-2 pt-1">
-                <button id="punchBtn" onclick="togglePunch()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-3 rounded-xl shadow transition flex items-center justify-center gap-2 text-sm">
+                <button id="punchBtn" onclick="togglePunch()" class="bg-primary-600 hover:bg-primary-500 text-white font-bold py-2.5 px-3 rounded-xl shadow transition flex items-center justify-center gap-2 text-sm">
                     <i class="fa-solid fa-play" id="punchIcon"></i> <span id="punchText">Iniciar Fichaje</span>
                 </button>
                 <button id="breakBtn" onclick="toggleBreak()" disabled class="bg-amber-600/30 text-slate-500 font-bold py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2 text-sm cursor-not-allowed">
@@ -149,13 +186,13 @@
 
         <!-- CONTROL DE GASTOS Y BILLETERA -->
         <section class="bg-slate-800/80 border border-slate-700/70 rounded-2xl p-4 shadow-lg space-y-4 relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+            <div class="absolute top-0 right-0 w-32 h-32 bg-primary-500/5 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none transition-colors duration-300"></div>
             
             <div class="flex justify-between items-center border-b border-slate-700/50 pb-2 relative z-10">
                 <h3 class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
-                    <i class="fa-solid fa-wallet text-emerald-400"></i> Gastos y Billetera
+                    <i class="fa-solid fa-wallet text-primary-400"></i> Gastos y Billetera
                 </h3>
-                <button onclick="openTransactionModal()" class="text-[11px] bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 rounded-lg text-white font-semibold transition flex items-center gap-1 shadow-md">
+                <button onclick="openTransactionModal()" class="text-[11px] bg-primary-600 hover:bg-primary-500 px-3 py-1.5 rounded-lg text-white font-semibold transition flex items-center gap-1 shadow-md">
                     <i class="fa-solid fa-plus"></i> Gasto / Ingreso
                 </button>
             </div>
@@ -164,7 +201,7 @@
             <div class="grid grid-cols-2 gap-2 text-center relative z-10">
                 <div class="bg-slate-900/50 p-2 rounded-xl border border-slate-700/30">
                     <span class="text-[10px] text-slate-400 block uppercase">Ingresó a Cartera (Quincena)</span>
-                    <span id="accIncome" class="text-sm font-bold text-emerald-400">+$0.00</span>
+                    <span id="accIncome" class="text-sm font-bold text-primary-400">+$0.00</span>
                 </div>
                 <div class="bg-slate-900/50 p-2 rounded-xl border border-slate-700/30">
                     <span class="text-[10px] text-slate-400 block uppercase">Gastado de Cartera (Quincena)</span>
@@ -182,7 +219,7 @@
             <div class="flex justify-between items-center">
                 <h3 class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Historial de Turnos</h3>
                 <div class="flex items-center gap-3">
-                    <button onclick="openShiftModal()" class="text-[11px] font-semibold text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1">
+                    <button onclick="openShiftModal()" class="text-[11px] font-semibold text-primary-400 hover:text-primary-300 transition flex items-center gap-1">
                         <i class="fa-solid fa-plus"></i> Manual
                     </button>
                     <button onclick="exportCSV()" class="text-[11px] text-slate-400 hover:text-slate-200 transition flex items-center gap-1">
@@ -213,7 +250,7 @@
         <div class="bg-slate-800 w-full max-w-sm rounded-t-3xl sm:rounded-2xl border border-slate-700 p-6 space-y-4 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-700 pb-3">
                 <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
-                    <i class="fa-solid fa-wallet text-emerald-400"></i> Mi Billetera
+                    <i class="fa-solid fa-wallet text-primary-400"></i> Mi Billetera
                 </h3>
                 <button onclick="closeWalletModal()" class="text-slate-400 hover:text-slate-200 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
@@ -222,19 +259,19 @@
             
             <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700 flex flex-col items-center">
                 <label class="text-[11px] text-slate-400 uppercase font-bold tracking-wider mb-2">Efectivo Actual</label>
-                <div class="flex items-center text-4xl font-black text-emerald-400">
+                <div class="flex items-center text-4xl font-black text-primary-400">
                     <span class="mr-1">$</span>
-                    <input type="number" id="walletInputAmount" step="0.01" class="bg-transparent w-32 text-center focus:outline-none border-b-2 border-slate-700 focus:border-emerald-500 pb-1" value="0.00">
+                    <input type="number" id="walletInputAmount" step="0.01" class="bg-transparent w-32 text-center focus:outline-none border-b-2 border-slate-700 focus:border-primary-500 pb-1" value="0.00">
                 </div>
             </div>
 
-            <button onclick="saveWalletAmount()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-xl transition shadow-md text-sm mt-2">
+            <button onclick="saveWalletAmount()" class="w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-3.5 rounded-xl transition shadow-md text-sm mt-2">
                 Fijar Monto en Billetera
             </button>
         </div>
     </div>
 
-    <!-- Modal Transacción Contable (Gastos de Billetera) -->
+    <!-- Modal Transacción Contable -->
     <div id="transactionModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
         <div class="bg-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-2xl border border-slate-700 p-6 space-y-4 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-700 pb-3">
@@ -250,11 +287,11 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-medium text-slate-300 mb-1">Fecha</label>
-                        <input type="date" id="transDate" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
+                        <input type="date" id="transDate" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-primary-500 text-sm">
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-slate-300 mb-1">Tipo</label>
-                        <select id="transType" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
+                        <select id="transType" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-primary-500 text-sm">
                             <option value="expense">Gasté Dinero (-)</option>
                             <option value="income">Entró Efectivo (+)</option>
                         </select>
@@ -263,17 +300,17 @@
 
                 <div>
                     <label class="block text-xs font-medium text-slate-300 mb-1">Monto ($)</label>
-                    <input type="number" id="transAmount" required step="0.01" min="0.01" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm" placeholder="0.00">
+                    <input type="number" id="transAmount" required step="0.01" min="0.01" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-primary-500 text-sm" placeholder="0.00">
                 </div>
 
                 <div>
                     <label class="block text-xs font-medium text-slate-300 mb-1">Concepto / Descripción</label>
-                    <input type="text" id="transConcept" required placeholder="Ej. Gasolina, Comida, Me pagaron..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
+                    <input type="text" id="transConcept" required placeholder="Ej. Gasolina, Comida, Me pagaron..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-primary-500 text-sm">
                 </div>
 
                 <p class="text-[10px] text-slate-400 text-center italic mt-2"><i class="fa-solid fa-circle-info"></i> Este movimiento sumará o restará automáticamente de tu Billetera principal.</p>
 
-                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-xl transition shadow-md text-sm">
+                <button type="submit" class="w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-3.5 rounded-xl transition shadow-md text-sm">
                     Guardar Movimiento
                 </button>
             </form>
@@ -293,11 +330,11 @@
                 
                 <div>
                     <label class="block text-xs font-medium text-slate-300 mb-1">Fecha</label>
-                    <input type="date" id="shiftDate" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
+                    <input type="date" id="shiftDate" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-primary-500 text-sm">
                 </div>
 
                 <div class="flex items-center gap-2 bg-slate-900/50 p-2.5 rounded-xl border border-slate-700/50">
-                    <input type="checkbox" id="isDayOff" onchange="toggleDayOffUI()" class="w-4 h-4 rounded text-emerald-500 bg-slate-900 border-slate-700 focus:ring-emerald-500">
+                    <input type="checkbox" id="isDayOff" onchange="toggleDayOffUI()" class="w-4 h-4 rounded text-primary-500 bg-slate-900 border-slate-700 focus:ring-primary-500">
                     <label for="isDayOff" class="text-sm font-medium text-slate-200">Marcar como Día Libre ⛱️</label>
                 </div>
 
@@ -305,11 +342,11 @@
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-xs font-medium text-slate-300 mb-1">Hora Entrada</label>
-                            <input type="time" id="startTime" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
+                            <input type="time" id="startTime" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-primary-500 text-sm">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-300 mb-1">Hora Salida</label>
-                            <input type="time" id="endTime" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
+                            <input type="time" id="endTime" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-primary-500 text-sm">
                             <p class="text-[10px] text-slate-500 mt-1 leading-tight">En blanco = Reloj en Vivo</p>
                         </div>
                     </div>
@@ -319,16 +356,16 @@
                         <div class="grid grid-cols-2 gap-3 mb-2">
                             <div>
                                 <label class="block text-[10px] text-slate-400 mb-1">Inicio Descanso</label>
-                                <input type="time" id="breakStartTime" onchange="calculateBreakMinutes()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
+                                <input type="time" id="breakStartTime" onchange="calculateBreakMinutes()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-100 focus:outline-none focus:border-primary-500 text-sm">
                             </div>
                             <div>
                                 <label class="block text-[10px] text-slate-400 mb-1">Fin Descanso</label>
-                                <input type="time" id="breakEndTime" onchange="calculateBreakMinutes()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
+                                <input type="time" id="breakEndTime" onchange="calculateBreakMinutes()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-100 focus:outline-none focus:border-primary-500 text-sm">
                             </div>
                         </div>
                         <div class="flex items-center gap-2 mt-2 pt-2 border-t border-slate-700/50">
                             <label class="text-xs text-slate-300">Minutos a descontar:</label>
-                            <input type="number" id="breakMinutes" value="30" min="0" class="w-16 bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-center text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
+                            <input type="number" id="breakMinutes" value="30" min="0" class="w-16 bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-center text-slate-100 focus:outline-none focus:border-primary-500 text-sm">
                         </div>
                     </div>
                 </div>
@@ -336,35 +373,47 @@
                 <div>
                     <label class="block text-xs font-medium text-slate-300 mb-1">Ubicación / Sitio</label>
                     <div class="relative">
-                        <input type="text" id="shiftLocation" placeholder="Ej. Taller, Obra A..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 pr-10 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
-                        <button type="button" onclick="getLocation('shiftLocation')" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-emerald-400 bg-slate-800 rounded-lg border border-slate-700 transition" title="Usar GPS actual">
+                        <input type="text" id="shiftLocation" placeholder="Ej. Taller, Obra A..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 pr-10 text-slate-100 focus:outline-none focus:border-primary-500 text-sm">
+                        <button type="button" onclick="getLocation('shiftLocation')" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-primary-400 bg-slate-800 rounded-lg border border-slate-700 transition" title="Usar GPS actual">
                             <i class="fa-solid fa-location-crosshairs text-sm"></i>
                         </button>
                     </div>
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-slate-300 mb-1">Notas (Opcional)</label>
-                    <input type="text" id="shiftNotes" placeholder="Detalles adicionales..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
+                    <input type="text" id="shiftNotes" placeholder="Detalles adicionales..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-primary-500 text-sm">
                 </div>
-                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-xl transition shadow-md text-sm mt-2">
+                <button type="submit" class="w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-3.5 rounded-xl transition shadow-md text-sm mt-2">
                     Guardar Turno
                 </button>
             </form>
         </div>
     </div>
 
-    <!-- Modal Configuración y Backup -->
+    <!-- Modal Configuración y Temas -->
     <div id="settingsModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
         <div class="bg-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-2xl border border-slate-700 p-6 space-y-4 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-                <h3 class="text-base font-bold text-slate-100">Configuración & Respaldos</h3>
+                <h3 class="text-base font-bold text-slate-100">Configuración</h3>
                 <button onclick="closeSettings()" class="text-slate-400 hover:text-slate-200 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             
             <div class="space-y-4">
+                <!-- Temas Visuales -->
                 <div>
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">Tema Visual</span>
+                    <div class="grid grid-cols-5 gap-2">
+                        <button onclick="applyTheme('emerald')" class="w-full h-8 rounded-lg bg-[#10b981] border-2 border-transparent focus:border-white transition shadow-md" title="Esmeralda"></button>
+                        <button onclick="applyTheme('dewalt')" class="w-full h-8 rounded-lg bg-[#eab308] border-2 border-transparent focus:border-white transition shadow-md" title="Amarillo DeWalt"></button>
+                        <button onclick="applyTheme('craftsman')" class="w-full h-8 rounded-lg bg-[#ef4444] border-2 border-transparent focus:border-white transition shadow-md" title="Rojo Craftsman"></button>
+                        <button onclick="applyTheme('flex')" class="w-full h-8 rounded-lg bg-[#84cc16] border-2 border-transparent focus:border-white transition shadow-md" title="Verde Neón FLEX"></button>
+                        <button onclick="applyTheme('trex')" class="w-full h-8 rounded-lg bg-[#f97316] border-2 border-transparent focus:border-white transition shadow-md" title="Madera Trex"></button>
+                    </div>
+                </div>
+
+                <div class="pt-2 border-t border-slate-700">
                     <label class="block text-xs font-medium text-slate-300 mb-1">Tarifa por Hora ($)</label>
-                    <input type="number" id="hourlyRate" step="0.01" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
+                    <input type="number" id="hourlyRate" step="0.01" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-primary-500 text-sm">
                 </div>
 
                 <div class="pt-2 border-t border-slate-700 space-y-2">
@@ -380,7 +429,7 @@
                     </div>
                 </div>
 
-                <button onclick="saveSettings()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-xl transition shadow-md text-sm mt-2">
+                <button onclick="saveSettings()" class="w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-3.5 rounded-xl transition shadow-md text-sm mt-2">
                     Guardar Cambios
                 </button>
             </div>
@@ -389,7 +438,7 @@
 
     <!-- Lógica JavaScript -->
     <script>
-        let settings = JSON.parse(localStorage.getItem('simple_work_settings')) || { rate: 20.00 };
+        let settings = JSON.parse(localStorage.getItem('simple_work_settings')) || { rate: 20.00, theme: 'emerald' };
         let shifts = JSON.parse(localStorage.getItem('simple_work_shifts')) || [];
         let transactions = JSON.parse(localStorage.getItem('simple_work_transactions')) || []; 
         let walletAmount = parseFloat(localStorage.getItem('simple_work_wallet')) || 0.00;
@@ -407,6 +456,57 @@
             location: ''
         };
         let timerInterval = null;
+
+        // ---- MANEJO DE TEMAS VISUALES ----
+        const themes = {
+            emerald: { p300: '110 231 183', p400: '52 211 153', p500: '16 185 129', p600: '5 150 105', p950: '2 44 34' },
+            dewalt: { p300: '253 224 71', p400: '250 204 21', p500: '234 179 8', p600: '202 138 4', p950: '66 32 6' },
+            craftsman: { p300: '252 165 165', p400: '248 113 113', p500: '239 68 68', p600: '220 38 38', p950: '69 10 10' },
+            flex: { p300: '190 242 100', p400: '163 230 53', p500: '132 204 22', p600: '101 163 13', p950: '26 46 5' },
+            trex: { p300: '253 186 116', p400: '251 146 60', p500: '249 115 22', p600: '234 88 12', p950: '67 20 7' }
+        };
+
+        function applyTheme(name) {
+            const t = themes[name] || themes.emerald;
+            const root = document.documentElement;
+            root.style.setProperty('--p300', t.p300);
+            root.style.setProperty('--p400', t.p400);
+            root.style.setProperty('--p500', t.p500);
+            root.style.setProperty('--p600', t.p600);
+            root.style.setProperty('--p950', t.p950);
+            settings.theme = name;
+            localStorage.setItem('simple_work_settings', JSON.stringify(settings));
+            if (chartInstance) renderApp();
+        }
+
+        // ---- TIPO DE CAMBIO (USD A MXN) ----
+        async function fetchExchangeRate() {
+            const badge = document.getElementById('exchangeRateBadge');
+            const icon = document.getElementById('exchangeIcon');
+            const cachedRate = localStorage.getItem('simple_work_exchange_rate');
+            const lastFetch = localStorage.getItem('simple_work_exchange_last_fetch');
+            const now = Date.now();
+
+            if (cachedRate) {
+                badge.innerHTML = `<i class="fa-solid fa-dollar-sign text-primary-400"></i> 1 = $${parseFloat(cachedRate).toFixed(2)} MXN`;
+            }
+
+            // Solo actualizar si pasó más de 1 hora para no saturar internet
+            if (!lastFetch || (now - parseInt(lastFetch) > 3600000)) {
+                try {
+                    const res = await fetch('https://open.er-api.com/v6/latest/USD');
+                    const data = await res.json();
+                    if (data && data.rates && data.rates.MXN) {
+                        const rate = data.rates.MXN;
+                        localStorage.setItem('simple_work_exchange_rate', rate);
+                        localStorage.setItem('simple_work_exchange_last_fetch', now);
+                        badge.innerHTML = `<i class="fa-solid fa-dollar-sign text-primary-400"></i> 1 = $${rate.toFixed(2)} MXN`;
+                    }
+                } catch (e) {
+                    if (!cachedRate) badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-amber-400"></i> Sin conexión`;
+                }
+            }
+        }
 
         // ---- GEOLOCALIZACIÓN GPS ----
         function getLocation(inputId) {
@@ -473,6 +573,9 @@
         }
 
         function initApp() {
+            applyTheme(settings.theme || 'emerald');
+            fetchExchangeRate();
+
             const today = new Date();
             today.setHours(0,0,0,0);
             
@@ -591,7 +694,7 @@
                 const dateFormatted = dateObj.toLocaleDateString('es-ES', { weekday: 'short', month: 'short', day: 'numeric' });
                 const isInc = t.type === 'income';
                 const sign = isInc ? '+' : '-';
-                const color = isInc ? 'text-emerald-400' : 'text-rose-400';
+                const color = isInc ? 'text-primary-400' : 'text-rose-400';
                 const icon = isInc ? 'fa-arrow-trend-up' : 'fa-receipt';
 
                 return `
@@ -748,7 +851,7 @@
                         <div class="bg-slate-800/90 border border-slate-700/70 p-3 rounded-xl flex justify-between items-center mt-2 shadow-sm">
                             <div class="space-y-0.5">
                                 <div class="text-sm font-semibold text-slate-200">${s.startTime} - ${s.endTime} <span class="text-[10px] font-normal text-slate-400">(${hrs.toFixed(2)}h)</span></div>
-                                ${s.location ? `<div class="text-[10px] text-emerald-400"><i class="fa-solid fa-location-dot mr-1"></i>${s.location}</div>` : ''}
+                                ${s.location ? `<div class="text-[10px] text-primary-400"><i class="fa-solid fa-location-dot mr-1"></i> ${s.location}</div>` : ''}
                                 ${s.notes ? `<div class="text-[10px] text-slate-400 italic">${s.notes}</div>` : ''}
                             </div>
                             <div class="flex items-center gap-3">
@@ -812,12 +915,17 @@
                 }
             }
 
+            // Obtenemos el color actual del tema para la gráfica
+            const rootStyle = getComputedStyle(document.documentElement);
+            const p500_rgb = rootStyle.getPropertyValue('--p500').trim().split(' ').join(',');
+            const chartColor = `rgba(${p500_rgb}, 1)`;
+
             if (chartInstance) chartInstance.destroy();
             chartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: labels,
-                    datasets: [{ label: 'Horas', data: data, backgroundColor: '#10b981', borderRadius: 6 }]
+                    datasets: [{ label: 'Horas', data: data, backgroundColor: chartColor, borderRadius: 6 }]
                 },
                 options: {
                     responsive: true,
@@ -919,7 +1027,7 @@
                 document.getElementById('timerPayDisplay').innerText = "$0.00";
                 document.getElementById('punchText').innerText = "Iniciar Fichaje";
                 document.getElementById('punchIcon').className = "fa-solid fa-play";
-                punchBtn.className = "bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-3 rounded-xl shadow transition flex items-center justify-center gap-2 text-sm";
+                punchBtn.className = "bg-primary-600 hover:bg-primary-500 text-white font-bold py-2.5 px-3 rounded-xl shadow transition flex items-center justify-center gap-2 text-sm";
                 breakBtn.disabled = true;
                 breakBtn.className = "bg-amber-600/30 text-slate-500 font-bold py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2 text-sm cursor-not-allowed";
                 statusEl.innerText = "Inactivo";
@@ -943,8 +1051,8 @@
                 document.getElementById('breakText').innerText = "Reanudar Turno";
             } else {
                 statusEl.innerText = "Trabajando";
-                statusEl.className = "text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
-                dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse";
+                statusEl.className = "text-[11px] font-medium px-2 py-0.5 rounded-full bg-primary-500/20 text-primary-400 border border-primary-500/30";
+                dot.className = "w-2.5 h-2.5 rounded-full bg-primary-400 animate-pulse";
                 document.getElementById('breakText').innerText = "Pausar Descanso";
             }
 
@@ -1147,6 +1255,7 @@
                         localStorage.setItem('simple_work_wallet', walletAmount);
                         alert('¡Copia de seguridad restaurada con éxito!');
                         closeSettings();
+                        applyTheme(settings.theme || 'emerald');
                         renderApp();
                     } else {
                         alert('El archivo no tiene el formato correcto.');
