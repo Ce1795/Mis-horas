@@ -128,7 +128,13 @@
 
             <div>
                 <label class="block text-[11px] text-slate-400 mb-1">Ubicación / Sitio (Opcional)</label>
-                <input type="text" id="liveLocation" placeholder="Ej. Taller, Obra A..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 focus:outline-none focus:border-emerald-500 text-xs">
+                <div class="relative">
+                    <input type="text" id="liveLocation" placeholder="Ej. Taller, Obra A..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 pr-10 text-slate-100 focus:outline-none focus:border-emerald-500 text-xs">
+                    <!-- BOTÓN GPS -->
+                    <button type="button" onclick="getLocation('liveLocation')" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-emerald-400 bg-slate-800 rounded-lg border border-slate-700 transition" title="Usar GPS actual">
+                        <i class="fa-solid fa-location-crosshairs text-sm"></i>
+                    </button>
+                </div>
             </div>
 
             <div class="grid grid-cols-2 gap-2 pt-1">
@@ -176,7 +182,6 @@
             <div class="flex justify-between items-center">
                 <h3 class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Historial de Turnos</h3>
                 <div class="flex items-center gap-3">
-                    <!-- Entrada Manual Movida Aquí -->
                     <button onclick="openShiftModal()" class="text-[11px] font-semibold text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1">
                         <i class="fa-solid fa-plus"></i> Manual
                     </button>
@@ -239,7 +244,6 @@
             
             <form id="transForm" onsubmit="saveTransaction(event)" class="space-y-4">
                 <input type="hidden" id="transId">
-                <!-- Guardamos si esta transacción ya había afectado la billetera -->
                 <input type="hidden" id="transOldAmount" value="0">
                 <input type="hidden" id="transOldType" value="expense">
                 
@@ -331,7 +335,12 @@
 
                 <div>
                     <label class="block text-xs font-medium text-slate-300 mb-1">Ubicación / Sitio</label>
-                    <input type="text" id="shiftLocation" placeholder="Ej. Taller, Obra A..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
+                    <div class="relative">
+                        <input type="text" id="shiftLocation" placeholder="Ej. Taller, Obra A..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 pr-10 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
+                        <button type="button" onclick="getLocation('shiftLocation')" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-emerald-400 bg-slate-800 rounded-lg border border-slate-700 transition" title="Usar GPS actual">
+                            <i class="fa-solid fa-location-crosshairs text-sm"></i>
+                        </button>
+                    </div>
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-slate-300 mb-1">Notas (Opcional)</label>
@@ -398,6 +407,40 @@
             location: ''
         };
         let timerInterval = null;
+
+        // ---- GEOLOCALIZACIÓN GPS ----
+        function getLocation(inputId) {
+            const inputEl = document.getElementById(inputId);
+            const originalPlaceholder = inputEl.placeholder;
+            inputEl.placeholder = "Buscando ubicación...";
+            inputEl.value = "";
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(async (position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    try {
+                        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+                        const data = await response.json();
+                        let address = data.address.road || data.address.suburb || data.address.city || "Ubicación guardada";
+                        if(data.address.house_number && data.address.road) {
+                            address = `${data.address.house_number} ${data.address.road}`;
+                        }
+                        inputEl.value = address;
+                    } catch (error) {
+                        inputEl.value = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+                    }
+                    inputEl.placeholder = originalPlaceholder;
+                }, (error) => {
+                    alert("Error al obtener GPS. Asegúrate de dar permisos de ubicación al navegador.");
+                    inputEl.placeholder = originalPlaceholder;
+                });
+            } else {
+                alert("Tu navegador no soporta GPS.");
+                inputEl.placeholder = originalPlaceholder;
+            }
+        }
+        // ------------------------------
 
         window.toggleDayDetails = function(dateStr) {
             const details = document.getElementById('details-' + dateStr);
