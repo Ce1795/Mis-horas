@@ -215,9 +215,14 @@
         <!-- RECORDATORIO DE PAGOS DE SERVICIOS -->
         <section class="bg-slate-800/50 border border-purple-700/50 rounded-2xl p-4 shadow-lg space-y-3 relative overflow-hidden">
             <div class="flex justify-between items-center border-b border-slate-700/50 pb-2 relative z-10">
-                <h3 class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
-                    <i class="fa-solid fa-calendar-check text-purple-400"></i> Calendario de Pagos
-                </h3>
+                <div class="flex items-center gap-2">
+                    <h3 class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-check text-purple-400"></i> Calendario de Pagos
+                    </h3>
+                    <span id="totalBillsAmount" class="text-[10px] bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full font-bold border border-purple-500/30">
+                        Total: $0.00
+                    </span>
+                </div>
                 <button onclick="openBillModal()" class="text-[11px] bg-purple-600/20 text-purple-400 hover:bg-purple-600/40 border border-purple-600/50 px-2 py-1 rounded-lg font-semibold transition flex items-center gap-1">
                     <i class="fa-solid fa-plus"></i> Añadir
                 </button>
@@ -864,14 +869,19 @@
         // ---- MÓDULO RECORDATORIO DE PAGOS (BILLS) ----
         function renderBillsList() {
             const listEl = document.getElementById('billsList');
+            const totalEl = document.getElementById('totalBillsAmount');
+            
             if (billsList.length === 0) {
                 listEl.innerHTML = `<div class="text-center py-3 text-slate-500 text-[11px]">No hay recibos o servicios pendientes.</div>`;
+                totalEl.innerText = 'Total: $0.00';
                 return;
             }
 
             const sortedBills = [...billsList].sort((a,b) => new Date(a.date) - new Date(b.date));
+            let totalAmount = 0;
 
             listEl.innerHTML = sortedBills.map(b => {
+                totalAmount += parseFloat(b.amount);
                 const dateObj = new Date(b.date + 'T00:00:00');
                 const dateFormatted = dateObj.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
                 
@@ -907,6 +917,8 @@
                         </div>
                     </div>`;
             }).join('');
+            
+            totalEl.innerText = `Total: $${totalAmount.toFixed(2)}`;
         }
 
         function openBillModal(editId = null) {
@@ -960,7 +972,7 @@
         function payBill(id) {
             const b = billsList.find(item => item.id === id);
             if (b) {
-                if(confirm(`¿Deseas marcar como pagado el servicio de ${b.concept}?\n\n(Esto es solo un recordatorio visual, tu Billetera NO se verá afectada).`)) {
+                if(confirm(`¿Marcar como pagado el servicio de ${b.concept}?\n\n(Esto es solo un recordatorio visual, tu Billetera NO se verá afectada).`)) {
                     
                     if (b.isRecurring) {
                         let oldDate = new Date(b.date + 'T00:00:00');
