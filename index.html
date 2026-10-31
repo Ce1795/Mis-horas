@@ -282,13 +282,11 @@
     <div id="printArea" class="hidden font-sans bg-white text-black p-4 sm:p-8">
         <div style="text-align: center; margin-bottom: 24px;">
             <h1 style="font-size: 24px; font-weight: bold; margin: 0;">REPORTE DE HORAS TRABAJADAS</h1>
-            <p style="margin: 4px 0; color: #555; font-size: 14px;">Documento justificante de servicios y jornada laboral</p>
         </div>
         
         <div style="display: flex; justify-content: space-between; border-bottom: 2px solid black; padding-bottom: 12px; margin-bottom: 24px;">
             <div>
-                <div style="font-size: 14px; margin-bottom: 4px;"><strong>Colaborador:</strong> <span id="printName"></span></div>
-                <div style="font-size: 14px;"><strong>Período cobrado:</strong> <span id="printPeriod"></span></div>
+                <div style="font-size: 14px;"><strong>Período reportado:</strong> <span id="printPeriod"></span></div>
             </div>
             <div style="text-align: right;">
                 <div style="font-size: 14px; margin-bottom: 4px;"><strong>Fecha de emisión:</strong> <span id="printDateGenerated"></span></div>
@@ -302,6 +300,7 @@
                     <th>Ubicación / Obra</th>
                     <th>Entrada</th>
                     <th>Salida</th>
+                    <th>Descanso</th>
                     <th>Hrs Netas</th>
                     <th>Actividad / Notas</th>
                 </tr>
@@ -313,20 +312,7 @@
 
         <div style="display: flex; justify-content: flex-end; margin-bottom: 60px;">
             <div style="width: 250px; text-align: right;">
-                <p style="margin: 4px 0; font-size: 14px;"><strong>Total de Horas:</strong> <span id="printTotalHrs"></span> h</p>
-                <p style="margin: 4px 0; font-size: 14px;"><strong>Tarifa por Hora:</strong> $<span id="printRate"></span></p>
-                <p style="font-size: 20px; font-weight: bold; margin-top: 12px; border-top: 2px solid black; padding-top: 8px;">
-                    Monto a Pagar: $<span id="printTotalPay"></span>
-                </p>
-            </div>
-        </div>
-
-        <div style="display: flex; justify-content: space-around; margin-top: 80px; text-align: center;">
-            <div style="width: 250px; border-top: 1px solid black; padding-top: 8px; font-size: 14px;">
-                Firma del Colaborador<br><span style="color: #666; font-size: 12px;">Entregado por</span>
-            </div>
-            <div style="width: 250px; border-top: 1px solid black; padding-top: 8px; font-size: 14px;">
-                Firma del Supervisor o Patrón<br><span style="color: #666; font-size: 12px;">Revisado y Aprobado</span>
+                <p style="margin: 4px 0; font-size: 16px;"><strong>Total de Horas:</strong> <span id="printTotalHrs"></span> h</p>
             </div>
         </div>
     </div>
@@ -507,10 +493,6 @@
             
             <div class="space-y-4">
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Tu Nombre (Para el PDF)</label>
-                    <input type="text" id="workerName" placeholder="Juan Pérez..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-primary-500 text-sm">
-                </div>
-                <div>
                     <label class="block text-xs font-medium text-slate-300 mb-1">Tarifa por Hora ($)</label>
                     <input type="number" id="hourlyRate" step="0.01" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-primary-500 text-sm">
                 </div>
@@ -568,7 +550,6 @@
     <script>
         let settings = JSON.parse(localStorage.getItem('simple_work_settings')) || {};
         settings.rate = settings.rate || 20.00;
-        settings.workerName = settings.workerName || '';
         settings.theme = settings.theme || 'emerald';
         settings.font = settings.font || 'sans';
         settings.geometry = settings.geometry || 'modern';
@@ -1070,40 +1051,25 @@
         }
         // ----------------------------------------------------
 
-        // ---- GENERADOR DE REPORTE PDF ----
+        // ---- GENERADOR DE REPORTE PDF (SOLO HORAS Y DESCANSOS) ----
         function generatePDF() {
-            // Verificar si hay nombre, si no, pedirlo
-            if (!settings.workerName || settings.workerName.trim() === '') {
-                const name = prompt("Para el reporte formal, ingresa tu nombre completo:");
-                if (name) {
-                    settings.workerName = name;
-                    localStorage.setItem('simple_work_settings', JSON.stringify(settings));
-                } else {
-                    return; // Cancela si no pone nombre
-                }
-            }
-
             const { start, end } = getCycleDates(currentCycleOffset);
             const opts = { month: 'short', day: 'numeric', year: 'numeric' };
             const periodStr = `${start.toLocaleDateString('es-ES', opts)} al ${end.toLocaleDateString('es-ES', opts)}`;
             
-            // Llenar Encabezado
-            document.getElementById('printName').innerText = settings.workerName;
             document.getElementById('printPeriod').innerText = periodStr;
             document.getElementById('printDateGenerated').innerText = new Date().toLocaleDateString('es-ES', opts);
-            document.getElementById('printRate').innerText = parseFloat(settings.rate).toFixed(2);
 
-            // Filtrar turnos de esta quincena
             const cycleShifts = shifts.filter(s => {
                 const d = new Date(s.date + 'T00:00:00');
                 return d >= start && d <= end;
-            }).sort((a,b) => new Date(a.date) - new Date(b.date)); // Orden cronológico normal para la tabla
+            }).sort((a,b) => new Date(a.date) - new Date(b.date));
 
             let totalMins = 0;
             let tbodyHtml = '';
 
             if (cycleShifts.length === 0) {
-                tbodyHtml = `<tr><td colspan="6" style="text-align:center; padding: 20px;">No se registraron horas en este período.</td></tr>`;
+                tbodyHtml = `<tr><td colspan="7" style="text-align:center; padding: 20px;">No se registraron horas en este período.</td></tr>`;
             } else {
                 cycleShifts.forEach(s => {
                     const dObj = new Date(s.date + 'T00:00:00');
@@ -1116,16 +1082,24 @@
                             <td>Día Libre</td>
                             <td>-</td>
                             <td>-</td>
+                            <td>-</td>
                             <td>0.00 h</td>
                             <td>-</td>
                         </tr>`;
                     } else {
                         const [hS, mS] = s.startTime.split(':').map(Number);
                         const [hE, mE] = s.endTime.split(':').map(Number);
-                        let mins = ((hE * 60 + mE) - (hS * 60 + mS)) - (parseInt(s.breakMinutes) || 0);
+                        let breakM = parseInt(s.breakMinutes) || 0;
+                        let mins = ((hE * 60 + mE) - (hS * 60 + mS)) - breakM;
                         if (mins < 0) mins += 24 * 60;
                         totalMins += mins;
                         let hrs = Math.max(0, mins / 60);
+
+                        // NUEVA LÓGICA DE TEXTO PARA EL DESCANSO EN EL PDF
+                        let breakText = breakM > 0 ? breakM + 'm' : 'Sin descanso';
+                        if (s.breakStartTime && s.breakEndTime) {
+                            breakText = `${s.breakStartTime} - ${s.breakEndTime} (${breakM}m)`;
+                        }
 
                         tbodyHtml += `
                         <tr>
@@ -1133,6 +1107,7 @@
                             <td>${s.location || 'No especificada'}</td>
                             <td>${s.startTime}</td>
                             <td>${s.endTime}</td>
+                            <td>${breakText}</td>
                             <td><strong>${hrs.toFixed(2)} h</strong></td>
                             <td>${s.notes || ''}</td>
                         </tr>`;
@@ -1143,15 +1118,10 @@
             document.getElementById('printTableBody').innerHTML = tbodyHtml;
 
             const totalHours = totalMins / 60;
-            const totalPay = totalHours * settings.rate;
-
             document.getElementById('printTotalHrs').innerText = totalHours.toFixed(2);
-            document.getElementById('printTotalPay').innerText = totalPay.toFixed(2);
 
-            // Disparar la impresión nativa (En celulares abre el diálogo para Guardar como PDF)
             window.print();
         }
-
         // ----------------------------------------------------
 
         function renderShiftsList(cycleShifts) {
@@ -1540,7 +1510,6 @@
         }
 
         function openSettings() {
-            document.getElementById('workerName').value = settings.workerName || '';
             document.getElementById('hourlyRate').value = settings.rate;
             updateSettingsUI();
             document.getElementById('settingsModal').classList.remove('hidden');
@@ -1549,7 +1518,6 @@
         function closeSettings() { document.getElementById('settingsModal').classList.add('hidden'); }
 
         function saveSettings() {
-            settings.workerName = document.getElementById('workerName').value.trim();
             settings.rate = parseFloat(document.getElementById('hourlyRate').value) || 0;
             localStorage.setItem('simple_work_settings', JSON.stringify(settings));
             closeSettings();
