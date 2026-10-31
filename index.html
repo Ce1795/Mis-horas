@@ -897,8 +897,8 @@
                         </div>
                         <div class="flex items-center gap-2 sm:ml-auto">
                             <div class="text-sm font-bold text-purple-400 mr-1">$${parseFloat(b.amount).toFixed(2)}</div>
-                            <button onclick="payBill('${b.id}')" class="bg-rose-600/20 hover:bg-rose-600/40 text-rose-400 border border-rose-600/50 px-2 py-1 rounded text-[10px] font-bold transition flex items-center gap-1">
-                                <i class="fa-solid fa-check"></i> Ya lo pagué
+                            <button onclick="payBill('${b.id}')" class="bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-400 border border-emerald-600/50 px-2 py-1 rounded text-[10px] font-bold transition flex items-center gap-1">
+                                <i class="fa-solid fa-check"></i> Pagado
                             </button>
                             <div class="flex gap-1 border-l border-slate-700 pl-2">
                                 <button onclick="editBill('${b.id}')" class="text-slate-500 hover:text-slate-300 p-1"><i class="fa-solid fa-pen text-[10px]"></i></button>
@@ -960,11 +960,9 @@
         function payBill(id) {
             const b = billsList.find(item => item.id === id);
             if (b) {
-                if(confirm(`¿Marcar como pagado el servicio de ${b.concept} por $${b.amount}?\n\n(Tranquilo, esto es solo una agenda, NO descontaremos dinero de tu Billetera de la aplicación).`)) {
+                if(confirm(`¿Deseas marcar como pagado el servicio de ${b.concept}?\n\n(Esto es solo un recordatorio visual, tu Billetera NO se verá afectada).`)) {
                     
-                    // Manejar Recurrencia
                     if (b.isRecurring) {
-                        // Crear nuevo pago sumando 1 mes a la fecha actual de vencimiento
                         let oldDate = new Date(b.date + 'T00:00:00');
                         oldDate.setMonth(oldDate.getMonth() + 1);
                         
@@ -976,11 +974,9 @@
                             isRecurring: true
                         };
                         
-                        // Reemplazar viejo por nuevo
                         billsList = billsList.filter(item => item.id !== id);
                         billsList.push(newBill);
                     } else {
-                        // Si no es recurrente, solo eliminarlo (darlo por pagado)
                         billsList = billsList.filter(item => item.id !== id);
                     }
                     
