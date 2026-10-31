@@ -577,6 +577,16 @@
             trex: { p300: '253 186 116', p400: '251 146 60', p500: '249 115 22', p600: '234 88 12', p950: '67 20 7' }
         };
 
+        // Helper function para formatear minutos en "Xh Ym"
+        function formatBreakTime(mins) {
+            if (!mins || mins <= 0) return '0m';
+            let h = Math.floor(mins / 60);
+            let m = mins % 60;
+            if (h > 0 && m > 0) return `${h}h ${m}m`;
+            if (h > 0) return `${h}h`;
+            return `${m}m`;
+        }
+
         function applyTheme(name) {
             const t = themes[name] || themes.emerald;
             const root = document.documentElement;
@@ -1095,10 +1105,10 @@
                         totalMins += mins;
                         let hrs = Math.max(0, mins / 60);
 
-                        // NUEVA LÓGICA DE TEXTO PARA EL DESCANSO EN EL PDF
-                        let breakText = breakM > 0 ? breakM + 'm' : 'Sin descanso';
+                        let formattedBreak = formatBreakTime(breakM);
+                        let breakText = breakM > 0 ? formattedBreak : 'Sin descanso';
                         if (s.breakStartTime && s.breakEndTime) {
-                            breakText = `${s.breakStartTime} - ${s.breakEndTime} (${breakM}m)`;
+                            breakText = `${s.breakStartTime} - ${s.breakEndTime} (${formattedBreak})`;
                         }
 
                         tbodyHtml += `
@@ -1166,15 +1176,17 @@
                     }
                     const [hS, mS] = s.startTime.split(':').map(Number);
                     const [hE, mE] = s.endTime.split(':').map(Number);
-                    let mins = ((hE * 60 + mE) - (hS * 60 + mS)) - (parseInt(s.breakMinutes) || 0);
+                    let breakM = parseInt(s.breakMinutes) || 0;
+                    let mins = ((hE * 60 + mE) - (hS * 60 + mS)) - breakM;
                     if (mins < 0) mins += 24 * 60;
                     totalDayMins += mins;
                     
                     let hrs = Math.max(0, mins / 60);
                     let pay = hrs * settings.rate;
 
-                    let breakText = s.breakMinutes > 0 ? `Descanso: ${s.breakMinutes}m` : 'Sin descanso';
-                    if (s.breakStartTime && s.breakEndTime) breakText = `${s.breakStartTime} - ${s.breakEndTime} (${s.breakMinutes}m)`;
+                    let formattedBreak = formatBreakTime(breakM);
+                    let breakText = breakM > 0 ? `Descanso: ${formattedBreak}` : 'Sin descanso';
+                    if (s.breakStartTime && s.breakEndTime) breakText = `${s.breakStartTime} - ${s.breakEndTime} (${formattedBreak})`;
 
                     return `
                         <div class="bg-slate-800/90 border border-slate-700/70 p-3 rounded-xl flex justify-between items-center mt-2 shadow-sm">
